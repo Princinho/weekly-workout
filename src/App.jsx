@@ -18,10 +18,10 @@ const DAYS = [
     id: 1, label: "MONDAY", sublabel: "Upper 1", accent: "#F5C518",
     muscles: ["Shoulders 35%", "Back 24%", "Chest 24%"],
     exercises: [
-      { name: "Flat Dumbbell Press", equipment: "2×10kg · bench or floor", sets: 4, reps: "8–12", videos: [], how: "Lie flat on your bench (or floor). Hold a dumbbell in each hand at chest level, elbows at ~45° from your body. Press both up until arms are nearly straight, then lower slowly back to chest.", gotchas: ["Don't flare elbows out to 90° — that stresses the shoulder joint", "Lower until you feel a stretch in the chest, not just halfway", "Keep your feet flat on the floor, don't arch aggressively"] },
+      { name: "Flat Dumbbell Press", equipment: "2×10kg · bench or floor", sets: 4, reps: "8–12", videos: ["https://youtube.com/shorts/rk8YayRoTRQ", "https://youtube.com/shorts/z6A4W5Dib28", "https://youtube.com/shorts/8fXfwG4ftaQ"], how: "Lie flat on your bench (or floor). Hold a dumbbell in each hand at chest level, elbows at ~45° from your body. Press both up until arms are nearly straight, then lower slowly back to chest.", gotchas: ["Don't flare elbows out to 90° — that stresses the shoulder joint", "Lower until you feel a stretch in the chest, not just halfway", "Keep your feet flat on the floor, don't arch aggressively"] },
       { name: "Seated Dumbbell Shoulder Press", equipment: "2×10kg · bench", sets: 3, reps: "8–12", videos: ["https://www.youtube.com/shorts/k6tzKisR3NY", "https://youtu.be/qEwKCR5JCog"], how: "Sit upright on the bench. Hold a dumbbell in each hand at ear level, palms facing forward. Press both overhead until arms are nearly straight, then lower back to ear height.", gotchas: ["Don't lean back excessively — keep your torso upright", "Stop just short of locking elbows at the top to keep tension", "Don't let the dumbbells drift forward — they should stay in line with your ears"] },
       { name: "Chest-Supported Dumbbell Row", equipment: "2×10kg · bench", sets: 4, reps: "8–12", videos: ["https://www.youtube.com/shorts/oNsqMW1gPiU", "https://youtube.com/shorts/4v59ShSjX2w"], how: "Lie face-down on the flat bench, chest resting on it, legs straddling the sides. Let both dumbbells hang straight down. Row them up toward your hips by squeezing your shoulder blades together, then lower slowly.", gotchas: ["Pull toward your hips, not your armpits — that hits the mid-back better", "Don't shrug your shoulders — keep them packed down", "Control the descent; don't just drop the weight"] },
-      { name: "Lean-In Lateral Raise", equipment: "1×10kg", sets: 3, reps: "10–20 per side", videos: ["https://www.youtube.com/shorts/Kl3LEzQ5Zqs", "https://www.youtube.com/shorts/Bcr6WBc2WKc", "https://youtube.com/shorts/Fr-T6grtBHw"], how: "Stand next to a wall or hold a sturdy upright. Lean away from it, holding one dumbbell in your free hand. Raise that arm out to the side to shoulder height, pause, lower slowly.", gotchas: ["Lead with your elbow, not your wrist", "Only raise to shoulder height — going higher recruits traps instead of delts", "The lean lets you get a better range of motion than a standard lateral raise"] },
+      { name: "Lean-In Lateral Raise", equipment: "1×10kg", sets: 3, reps: "8 per side", videos: ["https://www.youtube.com/shorts/Kl3LEzQ5Zqs", "https://www.youtube.com/shorts/Bcr6WBc2WKc", "https://youtube.com/shorts/Fr-T6grtBHw"], how: "Stand next to a wall or hold a sturdy upright. Lean away from it, holding one dumbbell in your free hand. Raise that arm out to the side to shoulder height, pause, lower slowly.", gotchas: ["Lead with your elbow, not your wrist", "Only raise to shoulder height — going higher recruits traps instead of delts", "The lean lets you get a better range of motion than a standard lateral raise"] },
       { name: "Dumbbell Overhead Tricep Extension", equipment: "1×10kg", sets: 3, reps: "10–15", videos: ["https://youtube.com/shorts/b_r_LW4HEcM", "https://youtube.com/shorts/AYqg9S5FrUU"], how: "Sit or stand. Hold one dumbbell with both hands, gripping it vertically. Raise it overhead. Keeping upper arms locked vertical, bend elbows to lower the dumbbell behind your head, then press back up.", gotchas: ["Upper arms must stay still — only your forearms move", "Don't let your elbows flare out wide", "Keep your core braced — don't arch your lower back as you press up"] },
     ],
   },
@@ -42,7 +42,7 @@ const DAYS = [
     exercises: [
       { name: "Barbell Floor Press", equipment: "30kg bar · floor", sets: 4, reps: "8–12", videos: ["https://youtu.be/SylLLJVhR78", "https://youtu.be/NamiVqVgPTU"], how: "Lie on your back on the floor. Hold the barbell with hands slightly wider than shoulder-width. Start with arms extended. Lower the bar until your upper arms (triceps) rest on the floor, pause for a beat, then press back up.", gotchas: ["The floor limits your range of motion — that's fine, it's intentional here", "Pause when triceps touch the floor — don't bounce", "Keep your wrists straight and stacked over your elbows", "Tuck elbows at roughly 45° from your body"] },
       { name: "3-Point Dumbbell Row", equipment: "1×10kg · bench", sets: 4, reps: "8–12 per side", videos: ["https://youtube.com/shorts/yHqqGd0tXcw", "https://youtube.com/shorts/PilFW4QEFwc"], how: "Place one hand and the same-side knee on the bench for support. Your back should be flat and parallel to the floor. Hold the dumbbell in the other hand, letting it hang. Row it up toward your hip — elbow goes past your back. Lower slowly.", gotchas: ["Pull toward your HIP, not your shoulder — this is the most common mistake", "Don't rotate your torso to get the weight up — keep hips and shoulders square", "At the top, squeeze the shoulder blade toward your spine", "Your supporting arm is there to stabilize, not to push"] },
-      { name: "Dumbbell Lateral Raises", equipment: "2×10kg", sets: 3, reps: "10–20", videos: ["https://www.youtube.com/shorts/Kl3LEzQ5Zqs", "https://youtube.com/shorts/Fr-T6grtBHw"], how: "Stand with a dumbbell in each hand at your sides. With a slight bend in your elbows, raise both arms out to the sides until they reach shoulder height. Lower slowly — aim for 3 seconds on the way down.", gotchas: ["Slow descent is where the gains are — don't just drop them", "Slightly tilt the dumbbell so the front edge is a bit lower (like pouring water) — better delt activation", "Don't shrug — keep shoulders packed down the whole time", "10kg will be heavy here; reduce range of motion if needed rather than swinging"] },
+      { name: "Dumbbell Lateral Raises", equipment: "2×10kg", sets: 3, reps: "8", videos: ["https://www.youtube.com/shorts/Kl3LEzQ5Zqs", "https://youtube.com/shorts/Fr-T6grtBHw"], how: "Stand with a dumbbell in each hand at your sides. With a slight bend in your elbows, raise both arms out to the sides until they reach shoulder height. Lower slowly — aim for 3 seconds on the way down.", gotchas: ["Slow descent is where the gains are — don't just drop them", "Slightly tilt the dumbbell so the front edge is a bit lower (like pouring water) — better delt activation", "Don't shrug — keep shoulders packed down the whole time", "10kg will be heavy here; reduce range of motion if needed rather than swinging"] },
       { name: "Standing Overhead Tricep Extension", equipment: "1×10kg", sets: 3, reps: "10–15", videos: ["https://youtube.com/shorts/AYqg9S5FrUU", "https://youtube.com/shorts/n-opc-Ap034"], how: "Stand upright. Hold one dumbbell with both hands overhead (grip the top weight plate). Upper arms stay glued vertically next to your head. Bend elbows to lower the dumbbell behind your head, then press back up.", gotchas: ["Upper arms must not move — only the forearms hinge", "Don't let elbows flare out to the sides", "Brace your core — the standing position makes it tempting to arch the back"] },
       { name: "Prone Arm Circles", equipment: "2×10kg · bench or floor", sets: 3, reps: "10–15", videos: [], how: "Lie face-down on the bench (or floor). Hold a dumbbell in each hand, arms hanging down. Move both arms in slow, controlled circles — forward for a set, then backward. Keep the movement small and deliberate.", gotchas: ["This is a shoulder health / rotator cuff exercise — don't go heavy or fast", "Keep your neck neutral — don't crane your head up", "Small circles are better than big sloppy ones", "If 10kg is too heavy, use no weight or just 1 dumbbell at a time"] },
     ],
@@ -60,83 +60,123 @@ const DAYS = [
   },
 ];
 
+// ── Beep ──────────────────────────────────────────────────────────────────────
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Three louder, longer beeps
+    [0, 0.22, 0.44].forEach((delay, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      // Add a compressor to avoid clipping
+      const comp = ctx.createDynamicsCompressor();
+      osc.connect(gain);
+      gain.connect(comp);
+      comp.connect(ctx.destination);
+      osc.frequency.value = i === 2 ? 1046 : 880; // last beep higher pitch
+      gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + delay + 0.01);
+      gain.gain.setValueAtTime(1.0, ctx.currentTime + delay + 0.18);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.35);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.36);
+    });
+  } catch (_) {}
+}
+
 // ── Rest Timer ────────────────────────────────────────────────────────────────
 function RestTimer({ triggerCount, accent }) {
   const DEFAULT = 60;
   const [duration, setDuration] = useState(DEFAULT);
   const [remaining, setRemaining] = useState(null); // null = idle
   const [running, setRunning] = useState(false);
-  const intervalRef = useRef(null);
+
+  // We track the absolute deadline so the timer survives backgrounding / lock screen
+  const deadlineRef = useRef(null); // Date.now() ms when timer should hit 0
+  const rafRef = useRef(null);
   const prevTrigger = useRef(0);
+  const beepedRef = useRef(false);
+
+  const tick = useCallback(() => {
+    if (!deadlineRef.current) return;
+    const left = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
+    setRemaining(left);
+    if (left <= 0) {
+      deadlineRef.current = null;
+      setRunning(false);
+      if (!beepedRef.current) {
+        beepedRef.current = true;
+        playBeep();
+      }
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
 
   const stop = useCallback(() => {
-    clearInterval(intervalRef.current);
+    deadlineRef.current = null;
+    cancelAnimationFrame(rafRef.current);
     setRunning(false);
   }, []);
 
   const reset = useCallback(() => {
     stop();
+    beepedRef.current = false;
     setRemaining(null);
   }, [stop]);
 
-  const start = useCallback((secs) => {
-    clearInterval(intervalRef.current);
-    const target = secs ?? duration;
-    setRemaining(target);
+  const startCountdown = useCallback((secs) => {
+    cancelAnimationFrame(rafRef.current);
+    beepedRef.current = false;
+    deadlineRef.current = Date.now() + secs * 1000;
     setRunning(true);
-    intervalRef.current = setInterval(() => {
-      setRemaining(r => {
-        if (r <= 1) {
-          clearInterval(intervalRef.current);
-          setRunning(false);
-          // beep on finish
-          try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            [0, 0.15, 0.3].forEach(delay => {
-              const osc = ctx.createOscillator();
-              const gain = ctx.createGain();
-              osc.connect(gain);
-              gain.connect(ctx.destination);
-              osc.frequency.value = 880;
-              gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
-              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
-              osc.start(ctx.currentTime + delay);
-              osc.stop(ctx.currentTime + delay + 0.15);
-            });
-          } catch (_) {}
-          return 0;
-        }
-        return r - 1;
-      });
-    }, 1000);
-  }, [duration]);
+    rafRef.current = requestAnimationFrame(tick);
+  }, [tick]);
+
+  // Resync when tab/app becomes visible again (handles lock screen / app switch)
+  useEffect(() => {
+    const onVisible = () => {
+      if (deadlineRef.current && document.visibilityState === "visible") {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [tick]);
 
   // Auto-start when a set is checked
   useEffect(() => {
     if (triggerCount > prevTrigger.current) {
       prevTrigger.current = triggerCount;
-      start(duration);
+      startCountdown(duration);
     }
-  }, [triggerCount, duration, start]);
-
-  useEffect(() => () => clearInterval(intervalRef.current), []);
+  }, [triggerCount, duration, startCountdown]);
 
   const adjustDuration = (delta) => {
     const next = Math.max(15, duration + delta);
     setDuration(next);
-    if (running) start(next); // restart with new duration if already running
+    if (running && deadlineRef.current) {
+      // Add/subtract the delta to the live deadline — never restart from scratch
+      deadlineRef.current = deadlineRef.current + delta * 1000;
+      // Immediately reflect in display
+      const left = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
+      setRemaining(left);
+    }
   };
 
   const idle = remaining === null;
-  const done = remaining === 0;
-  const progress = idle ? 0 : Math.max(0, (remaining / duration) * 100);
+  const done = remaining === 0 && !running;
+  const progress = idle ? 0 : duration > 0 ? Math.max(0, (remaining / duration) * 100) : 0;
 
   const fmt = (s) => {
     if (s === null) return `${duration}s`;
     return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : `${s}s`;
   };
 
-  // Arc SVG
   const R = 22, C = 2 * Math.PI * R;
   const dash = idle ? 0 : (progress / 100) * C;
 
@@ -165,7 +205,6 @@ function RestTimer({ triggerCount, accent }) {
             strokeWidth="3"
             strokeDasharray={`${dash} ${C}`}
             strokeLinecap="round"
-            style={{ transition: running ? "stroke-dasharray 1s linear" : "none" }}
           />
         </svg>
         <div style={{
@@ -178,7 +217,7 @@ function RestTimer({ triggerCount, accent }) {
         </div>
       </div>
 
-      {/* Label + controls */}
+      {/* Label + duration controls */}
       <div style={{ flex: 1 }}>
         <div style={{
           fontSize: 10, letterSpacing: "0.12em",
@@ -188,14 +227,11 @@ function RestTimer({ triggerCount, accent }) {
         }}>
           {done ? "REST COMPLETE — GO!" : running ? "RESTING…" : "REST TIMER"}
         </div>
-
-        {/* Duration adjust */}
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button onClick={() => adjustDuration(-15)} style={{
             width: 26, height: 26, borderRadius: 6, border: "1px solid #ddd8d0",
             background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700,
-            color: "#666", display: "flex", alignItems: "center", justifyContent: "center",
-            lineHeight: 1,
+            color: "#666", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
           }}>−</button>
           <span style={{ fontSize: 11, fontFamily: "'Inconsolata', monospace", color: running || done ? "#ccc" : "#666", minWidth: 36, textAlign: "center" }}>
             {duration}s
@@ -203,8 +239,7 @@ function RestTimer({ triggerCount, accent }) {
           <button onClick={() => adjustDuration(+15)} style={{
             width: 26, height: 26, borderRadius: 6, border: "1px solid #ddd8d0",
             background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700,
-            color: "#666", display: "flex", alignItems: "center", justifyContent: "center",
-            lineHeight: 1,
+            color: "#666", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
           }}>+</button>
         </div>
       </div>
@@ -215,24 +250,20 @@ function RestTimer({ triggerCount, accent }) {
           <button onClick={stop} style={{
             padding: "6px 12px", borderRadius: 6, border: "none",
             background: "#2e2e2e", color: "#ccc",
-            fontFamily: "'Inconsolata', monospace", fontSize: 11,
-            fontWeight: 600, cursor: "pointer", letterSpacing: "0.05em",
+            fontFamily: "'Inconsolata', monospace", fontSize: 11, fontWeight: 600, cursor: "pointer", letterSpacing: "0.05em",
           }}>STOP</button>
         ) : (
-          <button onClick={() => start()} style={{
+          <button onClick={() => startCountdown(duration)} style={{
             padding: "6px 12px", borderRadius: 6, border: "none",
             background: accent, color: "#1a1a1a",
-            fontFamily: "'Inconsolata', monospace", fontSize: 11,
-            fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em",
+            fontFamily: "'Inconsolata', monospace", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em",
           }}>START</button>
         )}
         <button onClick={reset} style={{
           padding: "6px 10px", borderRadius: 6,
-          border: "1px solid #ddd8d0",
-          background: "transparent",
+          border: "1px solid #ddd8d0", background: "transparent",
           color: running || done ? "#888" : "#aaa",
-          fontFamily: "'Inconsolata', monospace", fontSize: 11,
-          fontWeight: 600, cursor: "pointer",
+          fontFamily: "'Inconsolata', monospace", fontSize: 11, fontWeight: 600, cursor: "pointer",
         }}>↺</button>
       </div>
     </div>
@@ -242,30 +273,103 @@ function RestTimer({ triggerCount, accent }) {
 // ── Video Carousel ─────────────────────────────────────────────────────────────
 function VideoCarousel({ videos, accent }) {
   const [active, setActive] = useState(0);
+  const containerRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      if (containerRef.current) {
+        setIsMobile(containerRef.current.offsetWidth < 400);
+      }
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
   if (!videos || videos.length === 0) return null;
   const ids = videos.map(getYouTubeId).filter(Boolean);
   if (ids.length === 0) return null;
+
   const currentId = ids[active];
   const isShort = videos[active]?.includes("/shorts/");
+
+  // Thumbnails strip
+  const Thumbnails = ids.length > 1 ? (
+    <div style={{
+      display: "flex",
+      flexDirection: isShort && !isMobile ? "column" : "row",
+      gap: 5,
+      flexWrap: "wrap",
+      marginTop: isShort && !isMobile ? 0 : 8,
+    }}>
+      {ids.map((id, i) => (
+        <button key={id} onClick={() => setActive(i)} style={{
+          border: `2px solid ${active === i ? accent : "transparent"}`,
+          borderRadius: 5, overflow: "hidden",
+          cursor: "pointer", padding: 0, background: "none",
+          opacity: active === i ? 1 : 0.5,
+          transition: "all 0.15s", flexShrink: 0,
+        }}>
+          <img
+            src={`https://img.youtube.com/vi/${id}/mqdefault.jpg`}
+            alt={`Video ${i + 1}`}
+            style={{ width: 72, height: 48, objectFit: "cover", display: "block" }}
+          />
+        </button>
+      ))}
+    </div>
+  ) : null;
+
+  // Player box
+  const Player = (
+    <div style={{
+      position: "relative",
+      paddingBottom: isShort ? "177.78%" : "56.25%",
+      height: 0,
+      borderRadius: 8,
+      overflow: "hidden",
+      background: "#111",
+      width: isShort && !isMobile ? 180 : "100%",
+      flexShrink: 0,
+    }}>
+      <iframe
+        key={currentId}
+        src={`https://www.youtube.com/embed/${currentId}?rel=0&modestbranding=1`}
+        title="Exercise video"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+      />
+    </div>
+  );
+
+  // Layout logic:
+  // - Shorts on desktop: player left (narrow, 9:16), thumbnails stacked right
+  // - Shorts on mobile: player full width, thumbnails below (row)
+  // - Regular videos always: player full width, thumbnails below (row)
+  const useRowLayout = isShort && !isMobile;
+
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.12em", color: accent, fontFamily: "'Inconsolata', monospace", fontWeight: 600, marginBottom: 8 }}>▶ VIDEO REFERENCE</div>
-      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-        <div style={{ flex: isShort ? "0 0 auto" : 1, width: isShort ? 180 : "100%" }}>
-          <div style={{ position: "relative", paddingBottom: isShort ? "177.78%" : "56.25%", height: 0, borderRadius: 8, overflow: "hidden", background: "#111" }}>
-            <iframe key={currentId} src={`https://www.youtube.com/embed/${currentId}?rel=0&modestbranding=1`} title="Exercise video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} />
-          </div>
-        </div>
-        {ids.length > 1 && (
-          <div style={{ display: "flex", flexDirection: isShort ? "column" : "row", gap: 5, flexWrap: isShort ? "nowrap" : "wrap" }}>
-            {ids.map((id, i) => (
-              <button key={id} onClick={() => setActive(i)} style={{ border: `2px solid ${active === i ? accent : "transparent"}`, borderRadius: 5, overflow: "hidden", cursor: "pointer", padding: 0, background: "none", opacity: active === i ? 1 : 0.5, transition: "all 0.15s", flexShrink: 0 }}>
-                <img src={`https://img.youtube.com/vi/${id}/mqdefault.jpg`} alt={`Video ${i + 1}`} style={{ width: isShort ? 64 : 72, height: isShort ? 42 : 48, objectFit: "cover", display: "block" }} />
-              </button>
-            ))}
-          </div>
-        )}
+    <div ref={containerRef} style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.12em", color: accent, fontFamily: "'Inconsolata', monospace", fontWeight: 600, marginBottom: 8 }}>
+        ▶ VIDEO REFERENCE
       </div>
+      {useRowLayout ? (
+        // Side-by-side: narrow short player + vertical thumbs on right
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+          {Player}
+          {Thumbnails}
+        </div>
+      ) : (
+        // Stacked: full-width player + thumbs below
+        <div>
+          {Player}
+          {Thumbnails}
+        </div>
+      )}
     </div>
   );
 }
@@ -283,7 +387,7 @@ export default function BWS() {
     const k = `${activeDay}-${ei}-${si}`;
     const wasOff = !completed[k];
     setCompleted(p => ({ ...p, [k]: !p[k] }));
-    if (wasOff) setTimerTrigger(t => t + 1); // only trigger on check, not uncheck
+    if (wasOff) setTimerTrigger(t => t + 1);
   };
   const isSetDone = (ei, si) => !!completed[`${activeDay}-${ei}-${si}`];
   const toggleExpand = (ei) => setExpanded(p => ({ ...p, [`${activeDay}-${ei}`]: !p[`${activeDay}-${ei}`] }));
@@ -355,7 +459,7 @@ export default function BWS() {
         </div>
       </div>
 
-      {/* Exercises + timer */}
+      {/* Exercises */}
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "16px 20px 120px" }}>
 
         {/* Rest Timer — floats fixed at bottom */}
