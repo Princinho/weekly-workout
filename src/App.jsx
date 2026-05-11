@@ -72,7 +72,7 @@ const BICEPS = {
   name: "Dumbbell Bicep Curl",
   equipment: "2×10kg",
   sets: 3, reps: "8–12",
-  videos: ["https://youtube.com/shorts/MKWBV29S6c0?si=3fQmC0tp-CG36rri", "https://youtube.com/shorts/MfW-dMRkOgY?si=iQnSXwhIkvgFdHUL", "https://youtube.com/shorts/lmIo_gVE8T4?si=tNuvIcBawqUJMCKx"],
+  videos: ["https://youtube.com/shorts/in9NZhEiHKc", "https://youtube.com/shorts/XE-BPbMwQ6Y"],
   how: "Stand with a dumbbell in each hand, arms fully extended, palms facing forward. Curl both dumbbells up toward your shoulders by bending your elbows. Squeeze at the top, then lower slowly back to full extension.",
   gotchas: ["Don't swing your torso — keep it completely still", "Full extension at the bottom matters — don't do half reps", "Supinate (rotate palm up) as you curl for full bicep contraction", "Elbows stay pinned at your sides — don't let them drift forward"],
 };
@@ -350,6 +350,9 @@ function PRModal({ exName, prs, onSave, onClose, accent }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function SettingsPanel({ customReps, onSave, onClose, accent }) {
   const [local, setLocal] = useState({ ...customReps });
+
+  // Re-sync if Firestore data arrives after the panel opened
+  useEffect(() => { setLocal({ ...customReps }); }, [customReps]);
   const unique = DAYS.flatMap(d => d.exercises).filter((e, i, arr) => arr.findIndex(x => x.name === e.name) === i);
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
@@ -368,7 +371,7 @@ function SettingsPanel({ customReps, onSave, onClose, accent }) {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{ex.name}</div>
               <div style={{ fontSize: 10, color: '#bbb', fontFamily: "'Inconsolata',monospace" }}>default: {ex.reps}</div>
             </div>
-            <input type="text" placeholder={ex.reps} value={local[ex.name] || ''} onChange={e => setLocal(p => ({ ...p, [ex.name]: e.target.value }))} style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: `1px solid ${local[ex.name] ? accent : '#e0dcd6'}`, fontFamily: "'Inconsolata',monospace", fontSize: 13, textAlign: 'center', outline: 'none' }} />
+            <input type="text" placeholder={ex.reps} value={local[ex.name] || ''} onChange={e => setLocal(p => ({ ...p, [ex.name]: e.target.value }))} style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: `1px solid ${local[ex.name]?.trim() ? accent : '#e0dcd6'}`, fontFamily: "'Inconsolata',monospace", fontSize: 13, textAlign: 'center', outline: 'none' }} />
           </div>
         ))}
         <button onClick={() => { onSave(local); onClose(); }} style={{ marginTop: 20, width: '100%', padding: 12, borderRadius: 8, border: 'none', background: accent, color: '#1a1a1a', fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>SAVE SETTINGS</button>
@@ -472,8 +475,12 @@ export default function BWS() {
   };
 
   const saveCustomReps = async (reps) => {
-    setCustomReps(reps);
-    if (user) await saveUserField(user.uid, 'customReps', reps);
+    // Strip empty strings — only keep entries where the user actually typed a value
+    const cleaned = Object.fromEntries(
+      Object.entries(reps).filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== '')
+    );
+    setCustomReps(cleaned);
+    if (user) await saveUserField(user.uid, 'customReps', cleaned);
   };
 
   const totalSets = day.exercises.reduce((s, e) => s + e.sets, 0);
@@ -582,7 +589,8 @@ export default function BWS() {
           const allDone = Array.from({ length: ex.sets }, (_, si) => isSetDone(ei, si)).every(Boolean);
           const open = isExpanded(ei);
           const validVideos = (ex.videos || []).filter(v => getYouTubeId(v));
-          const displayReps = customReps[ex.name] || ex.reps;
+          const customVal = customReps[ex.name] && String(customReps[ex.name]).trim();
+          const displayReps = customVal || ex.reps;
           const exPrs = prs[ex.name] || [];
           const bestPR = exPrs.length ? Math.max(...exPrs.map(p => p.reps)) : null;
 
@@ -596,8 +604,8 @@ export default function BWS() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
                     <span style={{ fontSize: 10, fontFamily: "'Inconsolata',monospace", background: '#f0ede8', color: '#666', padding: '2px 8px', borderRadius: 4 }}>{ex.equipment}</span>
-                    <span style={{ fontSize: 11, color: customReps[ex.name] ? day.accent : '#999', fontFamily: "'Inconsolata',monospace", fontWeight: customReps[ex.name] ? 600 : 400 }}>
-                      {ex.sets} sets · {displayReps} reps{customReps[ex.name] ? <span style={{ color: '#bbb', fontWeight: 400 }}> (custom)</span> : ''}
+                    <span style={{ fontSize: 11, color: customVal ? day.accent : '#999', fontFamily: "'Inconsolata',monospace", fontWeight: customVal ? 600 : 400 }}>
+                      {ex.sets} sets · {displayReps} reps{customVal ? <span style={{ color: '#bbb', fontWeight: 400 }}> (custom)</span> : ''}
                     </span>
                     {validVideos.length > 0 && <span style={{ fontSize: 9, fontFamily: "'Inconsolata',monospace", background: '#fff5f5', color: '#E8533F', padding: '2px 7px', borderRadius: 4 }}>▶ {validVideos.length} video{validVideos.length > 1 ? 's' : ''}</span>}
                     {bestPR && <span style={{ fontSize: 9, fontFamily: "'Inconsolata',monospace", background: day.accent + '18', color: day.accent, padding: '2px 7px', borderRadius: 4 }}>🏆 {bestPR} reps</span>}
