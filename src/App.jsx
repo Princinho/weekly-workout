@@ -1,16 +1,80 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth, signInWithPopup, signOut,
+  GoogleAuthProvider, onAuthStateChanged,
+} from "firebase/auth";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  collection, addDoc, query, getDocs, orderBy,
+} from "firebase/firestore";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FIREBASE
+// ─────────────────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAjhDgrRHW1_GeRDXrK5sUmHpWKngRjm8A",
+  authDomain: "wikly-575a4.firebaseapp.com",
+  projectId: "wikly-575a4",
+  storageBucket: "wikly-575a4.firebasestorage.app",
+  messagingSenderId: "476927552894",
+  appId: "1:476927552894:web:23a8b5694bb76c9d79972f",
+  measurementId: "G-FDD47FNZLY",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// ─── Firestore helpers ────────────────────────────────────────────────────────
+const userDoc = (uid) => doc(db, "users", uid);
+const prsCol = (uid, exName) => collection(db, "users", uid, "prs", exName, "entries");
+
+async function loadUserData(uid) {
+  const snap = await getDoc(userDoc(uid));
+  return snap.exists() ? snap.data() : {};
+}
+
+async function saveUserField(uid, field, value) {
+  await setDoc(userDoc(uid), { [field]: value }, { merge: true });
+}
+
+async function loadPRs(uid, exName) {
+  try {
+    const q = query(prsCol(uid, exName), orderBy("date", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  } catch { return []; }
+}
+
+async function addPR(uid, exName, pr) {
+  await addDoc(prsCol(uid, exName), pr);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 const getYouTubeId = (url) => {
   const patterns = [
     /youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/,
     /youtu\.be\/([a-zA-Z0-9_-]+)/,
     /youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
   ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return m[1];
-  }
+  for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
   return null;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WORKOUT DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const BICEPS = {
+  name: "Dumbbell Bicep Curl",
+  equipment: "2×10kg",
+  sets: 3, reps: "8–12",
+  videos: ["https://youtube.com/shorts/MKWBV29S6c0?si=3fQmC0tp-CG36rri", "https://youtube.com/shorts/MfW-dMRkOgY?si=iQnSXwhIkvgFdHUL", "https://youtube.com/shorts/lmIo_gVE8T4?si=tNuvIcBawqUJMCKx"],
+  how: "Stand with a dumbbell in each hand, arms fully extended, palms facing forward. Curl both dumbbells up toward your shoulders by bending your elbows. Squeeze at the top, then lower slowly back to full extension.",
+  gotchas: ["Don't swing your torso — keep it completely still", "Full extension at the bottom matters — don't do half reps", "Supinate (rotate palm up) as you curl for full bicep contraction", "Elbows stay pinned at your sides — don't let them drift forward"],
 };
 
 const DAYS = [
@@ -23,6 +87,7 @@ const DAYS = [
       { name: "Chest-Supported Dumbbell Row", equipment: "2×10kg · bench", sets: 4, reps: "8–12", videos: ["https://www.youtube.com/shorts/oNsqMW1gPiU", "https://youtube.com/shorts/4v59ShSjX2w"], how: "Lie face-down on the flat bench, chest resting on it, legs straddling the sides. Let both dumbbells hang straight down. Row them up toward your hips by squeezing your shoulder blades together, then lower slowly.", gotchas: ["Pull toward your hips, not your armpits — that hits the mid-back better", "Don't shrug your shoulders — keep them packed down", "Control the descent; don't just drop the weight"] },
       { name: "Lean-In Lateral Raise", equipment: "1×10kg", sets: 3, reps: "8 per side", videos: ["https://www.youtube.com/shorts/Kl3LEzQ5Zqs", "https://www.youtube.com/shorts/Bcr6WBc2WKc", "https://youtube.com/shorts/Fr-T6grtBHw"], how: "Stand next to a wall or hold a sturdy upright. Lean away from it, holding one dumbbell in your free hand. Raise that arm out to the side to shoulder height, pause, lower slowly.", gotchas: ["Lead with your elbow, not your wrist", "Only raise to shoulder height — going higher recruits traps instead of delts", "The lean lets you get a better range of motion than a standard lateral raise"] },
       { name: "Dumbbell Overhead Tricep Extension", equipment: "1×10kg", sets: 3, reps: "10–15", videos: ["https://youtube.com/shorts/b_r_LW4HEcM", "https://youtube.com/shorts/AYqg9S5FrUU"], how: "Sit or stand. Hold one dumbbell with both hands, gripping it vertically. Raise it overhead. Keeping upper arms locked vertical, bend elbows to lower the dumbbell behind your head, then press back up.", gotchas: ["Upper arms must stay still — only your forearms move", "Don't let your elbows flare out wide", "Keep your core braced — don't arch your lower back as you press up"] },
+      { ...BICEPS },
     ],
   },
   {
@@ -45,6 +110,7 @@ const DAYS = [
       { name: "Dumbbell Lateral Raises", equipment: "2×10kg", sets: 3, reps: "8", videos: ["https://www.youtube.com/shorts/Kl3LEzQ5Zqs", "https://youtube.com/shorts/Fr-T6grtBHw"], how: "Stand with a dumbbell in each hand at your sides. With a slight bend in your elbows, raise both arms out to the sides until they reach shoulder height. Lower slowly — aim for 3 seconds on the way down.", gotchas: ["Slow descent is where the gains are — don't just drop them", "Slightly tilt the dumbbell so the front edge is a bit lower (like pouring water) — better delt activation", "Don't shrug — keep shoulders packed down the whole time", "10kg will be heavy here; reduce range of motion if needed rather than swinging"] },
       { name: "Standing Overhead Tricep Extension", equipment: "1×10kg", sets: 3, reps: "10–15", videos: ["https://youtube.com/shorts/AYqg9S5FrUU", "https://youtube.com/shorts/n-opc-Ap034"], how: "Stand upright. Hold one dumbbell with both hands overhead (grip the top weight plate). Upper arms stay glued vertically next to your head. Bend elbows to lower the dumbbell behind your head, then press back up.", gotchas: ["Upper arms must not move — only the forearms hinge", "Don't let elbows flare out to the sides", "Brace your core — the standing position makes it tempting to arch the back"] },
       { name: "Prone Arm Circles", equipment: "2×10kg · bench or floor", sets: 3, reps: "10–15", videos: [], how: "Lie face-down on the bench (or floor). Hold a dumbbell in each hand, arms hanging down. Move both arms in slow, controlled circles — forward for a set, then backward. Keep the movement small and deliberate.", gotchas: ["This is a shoulder health / rotator cuff exercise — don't go heavy or fast", "Keep your neck neutral — don't crane your head up", "Small circles are better than big sloppy ones", "If 10kg is too heavy, use no weight or just 1 dumbbell at a time"] },
+      { ...BICEPS },
     ],
   },
   {
@@ -60,328 +126,329 @@ const DAYS = [
   },
 ];
 
-// ── Beep ──────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// BEEP
+// ─────────────────────────────────────────────────────────────────────────────
 function playBeep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // Three louder, longer beeps
     [0, 0.22, 0.44].forEach((delay, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      // Add a compressor to avoid clipping
-      const comp = ctx.createDynamicsCompressor();
-      osc.connect(gain);
-      gain.connect(comp);
-      comp.connect(ctx.destination);
-      osc.frequency.value = i === 2 ? 1046 : 880; // last beep higher pitch
+      const osc = ctx.createOscillator(); const gain = ctx.createGain(); const comp = ctx.createDynamicsCompressor();
+      osc.connect(gain); gain.connect(comp); comp.connect(ctx.destination);
+      osc.frequency.value = i === 2 ? 1046 : 880;
       gain.gain.setValueAtTime(0, ctx.currentTime + delay);
       gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + delay + 0.01);
       gain.gain.setValueAtTime(1.0, ctx.currentTime + delay + 0.18);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.35);
-      osc.start(ctx.currentTime + delay);
-      osc.stop(ctx.currentTime + delay + 0.36);
+      osc.start(ctx.currentTime + delay); osc.stop(ctx.currentTime + delay + 0.36);
     });
-  } catch (_) {}
+  } catch (_) { }
 }
 
-// ── Rest Timer ────────────────────────────────────────────────────────────────
-function RestTimer({ triggerCount, accent }) {
-  const DEFAULT = 60;
-  const [duration, setDuration] = useState(DEFAULT);
-  const [remaining, setRemaining] = useState(null); // null = idle
-  const [running, setRunning] = useState(false);
+// ─────────────────────────────────────────────────────────────────────────────
+// SERVICE WORKER
+// ─────────────────────────────────────────────────────────────────────────────
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try { await navigator.serviceWorker.register('/sw.js'); } catch (e) { console.warn('SW failed', e); }
+}
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  return (await Notification.requestPermission()) === 'granted';
+}
+function swMessage(type, extra = {}) {
+  if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) return;
+  navigator.serviceWorker.controller.postMessage({ type, ...extra });
+}
 
-  // We track the absolute deadline so the timer survives backgrounding / lock screen
-  const deadlineRef = useRef(null); // Date.now() ms when timer should hit 0
-  const rafRef = useRef(null);
-  const prevTrigger = useRef(0);
-  const beepedRef = useRef(false);
+// ─────────────────────────────────────────────────────────────────────────────
+// REST TIMER
+// ─────────────────────────────────────────────────────────────────────────────
+function RestTimer({ triggerCount, accent }) {
+  const DEFAULT = 105;
+  const [duration, setDuration] = useState(DEFAULT);
+  const [remaining, setRemaining] = useState(null);
+  const [running, setRunning] = useState(false);
+  const deadlineRef = useRef(null); const rafRef = useRef(null);
+  const prevTrigger = useRef(0); const beepedRef = useRef(false);
 
   const tick = useCallback(() => {
     if (!deadlineRef.current) return;
     const left = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
     setRemaining(left);
-    if (left <= 0) {
-      deadlineRef.current = null;
-      setRunning(false);
-      if (!beepedRef.current) {
-        beepedRef.current = true;
-        playBeep();
-      }
-      return;
-    }
+    if (left <= 0) { deadlineRef.current = null; setRunning(false); if (!beepedRef.current) { beepedRef.current = true; playBeep(); } swMessage('TIMER_STOP'); return; }
     rafRef.current = requestAnimationFrame(tick);
   }, []);
 
-  const stop = useCallback(() => {
-    deadlineRef.current = null;
-    cancelAnimationFrame(rafRef.current);
-    setRunning(false);
-  }, []);
-
-  const reset = useCallback(() => {
-    stop();
-    beepedRef.current = false;
-    setRemaining(null);
-  }, [stop]);
-
+  const stop = useCallback(() => { deadlineRef.current = null; cancelAnimationFrame(rafRef.current); setRunning(false); swMessage('TIMER_STOP'); }, []);
+  const reset = useCallback(() => { stop(); beepedRef.current = false; setRemaining(null); swMessage('TIMER_RESET'); }, [stop]);
   const startCountdown = useCallback((secs) => {
-    cancelAnimationFrame(rafRef.current);
-    beepedRef.current = false;
-    deadlineRef.current = Date.now() + secs * 1000;
-    setRunning(true);
-    rafRef.current = requestAnimationFrame(tick);
+    cancelAnimationFrame(rafRef.current); beepedRef.current = false;
+    deadlineRef.current = Date.now() + secs * 1000; setRunning(true);
+    rafRef.current = requestAnimationFrame(tick); swMessage('TIMER_START', { remaining: secs });
   }, [tick]);
 
-  // Resync when tab/app becomes visible again (handles lock screen / app switch)
   useEffect(() => {
-    const onVisible = () => {
-      if (deadlineRef.current && document.visibilityState === "visible") {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisible);
-      cancelAnimationFrame(rafRef.current);
-    };
+    const onVisible = () => { if (deadlineRef.current && document.visibilityState === 'visible') { cancelAnimationFrame(rafRef.current); rafRef.current = requestAnimationFrame(tick); } };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => { document.removeEventListener('visibilitychange', onVisible); cancelAnimationFrame(rafRef.current); };
   }, [tick]);
 
-  // Auto-start when a set is checked
-  useEffect(() => {
-    if (triggerCount > prevTrigger.current) {
-      prevTrigger.current = triggerCount;
-      startCountdown(duration);
-    }
-  }, [triggerCount, duration, startCountdown]);
+  useEffect(() => { if (triggerCount > prevTrigger.current) { prevTrigger.current = triggerCount; startCountdown(duration); } }, [triggerCount, duration, startCountdown]);
 
   const adjustDuration = (delta) => {
-    const next = Math.max(15, duration + delta);
-    setDuration(next);
+    const next = Math.max(15, duration + delta); setDuration(next);
     if (running && deadlineRef.current) {
-      // Add/subtract the delta to the live deadline — never restart from scratch
-      deadlineRef.current = deadlineRef.current + delta * 1000;
-      // Immediately reflect in display
-      const left = Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000));
-      setRemaining(left);
+      deadlineRef.current += delta * 1000;
+      setRemaining(Math.max(0, Math.round((deadlineRef.current - Date.now()) / 1000)));
+      swMessage('TIMER_ADJUST', { deltaSecs: delta });
     }
   };
 
-  const idle = remaining === null;
-  const done = remaining === 0 && !running;
+  const idle = remaining === null; const done = remaining === 0 && !running;
   const progress = idle ? 0 : duration > 0 ? Math.max(0, (remaining / duration) * 100) : 0;
-
-  const fmt = (s) => {
-    if (s === null) return `${duration}s`;
-    return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : `${s}s`;
-  };
-
-  const R = 22, C = 2 * Math.PI * R;
-  const dash = idle ? 0 : (progress / 100) * C;
+  const fmt = (s) => s === null ? `${duration}s` : s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s}s`;
+  const R = 22, C = 2 * Math.PI * R, dash = idle ? 0 : (progress / 100) * C;
 
   return (
-    <div style={{
-      position: "fixed", bottom: 16, left: "50%", transform: "translateX(-50%)",
-      width: "calc(100% - 40px)", maxWidth: 640,
-      zIndex: 200,
-      background: done ? "#1a1a1a" : running ? "#1a1a1a" : "#f0ede8",
-      border: `1.5px solid ${running || done ? accent + "88" : "#ddd8d0"}`,
-      borderRadius: 12,
-      padding: "12px 16px",
-      display: "flex", alignItems: "center", gap: 14,
-      transition: "background 0.3s, border-color 0.3s",
-      boxShadow: running
-        ? `0 0 0 3px ${accent}33, 0 8px 32px rgba(0,0,0,0.25)`
-        : "0 4px 20px rgba(0,0,0,0.15)",
-    }}>
-      {/* Arc progress */}
-      <div style={{ flexShrink: 0, position: "relative", width: 52, height: 52 }}>
-        <svg width="52" height="52" style={{ transform: "rotate(-90deg)" }}>
-          <circle cx="26" cy="26" r={R} fill="none" stroke={running || done ? "#2e2e2e" : "#ddd8d0"} strokeWidth="3" />
-          <circle
-            cx="26" cy="26" r={R} fill="none"
-            stroke={done ? "#4CAF79" : accent}
-            strokeWidth="3"
-            strokeDasharray={`${dash} ${C}`}
-            strokeLinecap="round"
-          />
+    <div style={{ position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: 640, zIndex: 200, background: done ? '#1a1a1a' : running ? '#1a1a1a' : '#f0ede8', border: `1.5px solid ${running || done ? accent + '88' : '#ddd8d0'}`, borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, transition: 'background 0.3s', boxShadow: running ? `0 0 0 3px ${accent}33, 0 8px 32px rgba(0,0,0,0.25)` : '0 4px 20px rgba(0,0,0,0.15)' }}>
+      <div style={{ flexShrink: 0, position: 'relative', width: 52, height: 52 }}>
+        <svg width="52" height="52" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="26" cy="26" r={R} fill="none" stroke={running || done ? '#2e2e2e' : '#ddd8d0'} strokeWidth="3" />
+          <circle cx="26" cy="26" r={R} fill="none" stroke={done ? '#4CAF79' : accent} strokeWidth="3" strokeDasharray={`${dash} ${C}`} strokeLinecap="round" />
         </svg>
-        <div style={{
-          position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: "'Inconsolata', monospace", fontWeight: 700,
-          fontSize: idle ? 11 : remaining >= 60 ? 11 : 14,
-          color: running || done ? (done ? "#4CAF79" : accent) : "#888",
-        }}>
-          {done ? "✓" : fmt(remaining)}
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inconsolata',monospace", fontWeight: 700, fontSize: idle ? 11 : remaining >= 60 ? 11 : 14, color: running || done ? (done ? '#4CAF79' : accent) : '#888' }}>
+          {done ? '✓' : fmt(remaining)}
         </div>
       </div>
-
-      {/* Label + duration controls */}
       <div style={{ flex: 1 }}>
-        <div style={{
-          fontSize: 10, letterSpacing: "0.12em",
-          fontFamily: "'Inconsolata', monospace", fontWeight: 600,
-          color: running ? accent : done ? "#4CAF79" : "#aaa",
-          marginBottom: 6,
-        }}>
-          {done ? "REST COMPLETE — GO!" : running ? "RESTING…" : "REST TIMER"}
+        <div style={{ fontSize: 10, letterSpacing: '0.12em', fontFamily: "'Inconsolata',monospace", fontWeight: 600, color: running ? accent : done ? '#4CAF79' : '#aaa', marginBottom: 6 }}>
+          {done ? 'REST COMPLETE — GO!' : running ? 'RESTING…' : 'REST TIMER'}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <button onClick={() => adjustDuration(-15)} style={{
-            width: 26, height: 26, borderRadius: 6, border: "1px solid #ddd8d0",
-            background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700,
-            color: "#666", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
-          }}>−</button>
-          <span style={{ fontSize: 11, fontFamily: "'Inconsolata', monospace", color: running || done ? "#ccc" : "#666", minWidth: 36, textAlign: "center" }}>
-            {duration}s
-          </span>
-          <button onClick={() => adjustDuration(+15)} style={{
-            width: 26, height: 26, borderRadius: 6, border: "1px solid #ddd8d0",
-            background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 700,
-            color: "#666", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
-          }}>+</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {[-15, +15].map(d => (
+            <button key={d} onClick={() => adjustDuration(d)} style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid #ddd8d0', background: '#fff', cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#666', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{d > 0 ? '+' : '−'}</button>
+          )).reduce((acc, el, i) => i === 0 ? [el, <span key="dur" style={{ fontSize: 11, fontFamily: "'Inconsolata',monospace", color: running || done ? '#ccc' : '#666', minWidth: 36, textAlign: 'center' }}>{duration}s</span>] : [...acc, el], [])}
         </div>
       </div>
-
-      {/* Action buttons */}
-      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-        {running ? (
-          <button onClick={stop} style={{
-            padding: "6px 12px", borderRadius: 6, border: "none",
-            background: "#2e2e2e", color: "#ccc",
-            fontFamily: "'Inconsolata', monospace", fontSize: 11, fontWeight: 600, cursor: "pointer", letterSpacing: "0.05em",
-          }}>STOP</button>
-        ) : (
-          <button onClick={() => startCountdown(duration)} style={{
-            padding: "6px 12px", borderRadius: 6, border: "none",
-            background: accent, color: "#1a1a1a",
-            fontFamily: "'Inconsolata', monospace", fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: "0.05em",
-          }}>START</button>
-        )}
-        <button onClick={reset} style={{
-          padding: "6px 10px", borderRadius: 6,
-          border: "1px solid #ddd8d0", background: "transparent",
-          color: running || done ? "#888" : "#aaa",
-          fontFamily: "'Inconsolata', monospace", fontSize: 11, fontWeight: 600, cursor: "pointer",
-        }}>↺</button>
+      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+        {running
+          ? <button onClick={stop} style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#2e2e2e', color: '#ccc', fontFamily: "'Inconsolata',monospace", fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>STOP</button>
+          : <button onClick={() => startCountdown(duration)} style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: accent, color: '#1a1a1a', fontFamily: "'Inconsolata',monospace", fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>START</button>}
+        <button onClick={reset} style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #ddd8d0', background: 'transparent', color: '#aaa', fontFamily: "'Inconsolata',monospace", fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>↺</button>
       </div>
     </div>
   );
 }
 
-// ── Video Carousel ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// VIDEO CAROUSEL
+// ─────────────────────────────────────────────────────────────────────────────
 function VideoCarousel({ videos, accent }) {
   const [active, setActive] = useState(0);
-  const containerRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
-
+  const containerRef = useRef(null); const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const check = () => {
-      if (containerRef.current) {
-        setIsMobile(containerRef.current.offsetWidth < 400);
-      }
-    };
-    check();
-    const ro = new ResizeObserver(check);
-    if (containerRef.current) ro.observe(containerRef.current);
-    return () => ro.disconnect();
+    const check = () => { if (containerRef.current) setIsMobile(containerRef.current.offsetWidth < 400); };
+    check(); const ro = new ResizeObserver(check); if (containerRef.current) ro.observe(containerRef.current); return () => ro.disconnect();
   }, []);
-
-  if (!videos || videos.length === 0) return null;
-  const ids = videos.map(getYouTubeId).filter(Boolean);
-  if (ids.length === 0) return null;
-
-  const currentId = ids[active];
-  const isShort = videos[active]?.includes("/shorts/");
-
-  // Thumbnails strip
-  const Thumbnails = ids.length > 1 ? (
-    <div style={{
-      display: "flex",
-      flexDirection: isShort && !isMobile ? "column" : "row",
-      gap: 5,
-      flexWrap: "wrap",
-      marginTop: isShort && !isMobile ? 0 : 8,
-    }}>
+  if (!videos?.length) return null;
+  const ids = videos.map(getYouTubeId).filter(Boolean); if (!ids.length) return null;
+  const currentId = ids[active]; const isShort = videos[active]?.includes('/shorts/'); const useRow = isShort && !isMobile;
+  const Thumbs = ids.length > 1 ? (
+    <div style={{ display: 'flex', flexDirection: useRow ? 'column' : 'row', gap: 5, flexWrap: 'wrap', marginTop: useRow ? 0 : 8 }}>
       {ids.map((id, i) => (
-        <button key={id} onClick={() => setActive(i)} style={{
-          border: `2px solid ${active === i ? accent : "transparent"}`,
-          borderRadius: 5, overflow: "hidden",
-          cursor: "pointer", padding: 0, background: "none",
-          opacity: active === i ? 1 : 0.5,
-          transition: "all 0.15s", flexShrink: 0,
-        }}>
-          <img
-            src={`https://img.youtube.com/vi/${id}/mqdefault.jpg`}
-            alt={`Video ${i + 1}`}
-            style={{ width: 72, height: 48, objectFit: "cover", display: "block" }}
-          />
+        <button key={id} onClick={() => setActive(i)} style={{ border: `2px solid ${active === i ? accent : 'transparent'}`, borderRadius: 5, overflow: 'hidden', cursor: 'pointer', padding: 0, background: 'none', opacity: active === i ? 1 : 0.5, transition: 'all 0.15s', flexShrink: 0 }}>
+          <img src={`https://img.youtube.com/vi/${id}/mqdefault.jpg`} alt="" style={{ width: 72, height: 48, objectFit: 'cover', display: 'block' }} />
         </button>
       ))}
     </div>
   ) : null;
-
-  // Player box
   const Player = (
-    <div style={{
-      position: "relative",
-      paddingBottom: isShort ? "177.78%" : "56.25%",
-      height: 0,
-      borderRadius: 8,
-      overflow: "hidden",
-      background: "#111",
-      width: isShort && !isMobile ? 180 : "100%",
-      flexShrink: 0,
-    }}>
-      <iframe
-        key={currentId}
-        src={`https://www.youtube.com/embed/${currentId}?rel=0&modestbranding=1`}
-        title="Exercise video"
-        frameBorder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-      />
+    <div style={{ position: 'relative', paddingBottom: isShort ? '177.78%' : '56.25%', height: 0, borderRadius: 8, overflow: 'hidden', background: '#111', width: useRow ? 180 : '100%', flexShrink: 0 }}>
+      <iframe key={currentId} src={`https://www.youtube.com/embed/${currentId}?rel=0&modestbranding=1`} title="video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} />
     </div>
   );
-
-  // Layout logic:
-  // - Shorts on desktop: player left (narrow, 9:16), thumbnails stacked right
-  // - Shorts on mobile: player full width, thumbnails below (row)
-  // - Regular videos always: player full width, thumbnails below (row)
-  const useRowLayout = isShort && !isMobile;
-
   return (
     <div ref={containerRef} style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.12em", color: accent, fontFamily: "'Inconsolata', monospace", fontWeight: 600, marginBottom: 8 }}>
-        ▶ VIDEO REFERENCE
-      </div>
-      {useRowLayout ? (
-        // Side-by-side: narrow short player + vertical thumbs on right
-        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          {Player}
-          {Thumbnails}
-        </div>
-      ) : (
-        // Stacked: full-width player + thumbs below
-        <div>
-          {Player}
-          {Thumbnails}
-        </div>
-      )}
+      <div style={{ fontSize: 10, letterSpacing: '0.12em', color: accent, fontFamily: "'Inconsolata',monospace", fontWeight: 600, marginBottom: 8 }}>▶ VIDEO REFERENCE</div>
+      {useRow ? <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>{Player}{Thumbs}</div> : <div>{Player}{Thumbs}</div>}
     </div>
   );
 }
 
-// ── Main App ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DIFFICULTY STARS
+// ─────────────────────────────────────────────────────────────────────────────
+function DifficultyRating({ value, onChange, accent }) {
+  const labels = ['', 'Easy', 'Moderate', 'Hard', 'Very Hard', 'Max Effort'];
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <span style={{ fontSize: 10, color: '#aaa', fontFamily: "'Inconsolata',monospace", letterSpacing: '0.08em' }}>DIFFICULTY</span>
+      <div style={{ display: 'flex', gap: 3 }}>
+        {[1, 2, 3, 4, 5].map(n => (
+          <button key={n} onClick={() => onChange(value === n ? 0 : n)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', fontSize: 16, lineHeight: 1, color: n <= value ? accent : '#ddd', transition: 'color 0.15s, transform 0.1s', transform: n <= value ? 'scale(1.15)' : 'scale(1)' }}>★</button>
+        ))}
+      </div>
+      {value > 0 && <span style={{ fontSize: 10, color: accent, fontFamily: "'Inconsolata',monospace" }}>{labels[value]}</span>}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PR MODAL
+// ─────────────────────────────────────────────────────────────────────────────
+function PRModal({ exName, prs, onSave, onClose, accent }) {
+  const [reps, setReps] = useState(''); const [note, setNote] = useState(''); const [saving, setSaving] = useState(false);
+  const sorted = [...prs].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const best = prs.length ? Math.max(...prs.map(p => p.reps)) : null;
+  const handleSave = async () => {
+    if (!reps) return; setSaving(true);
+    await onSave({ reps: parseInt(reps), note, date: new Date().toISOString() });
+    setReps(''); setNote(''); setSaving(false);
+  };
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 640, padding: '24px 20px 40px', maxHeight: '80vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 10, color: accent, fontFamily: "'Inconsolata',monospace", letterSpacing: '0.1em', fontWeight: 600 }}>PERSONAL RECORDS</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#1a1a1a', marginTop: 2 }}>{exName}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, color: '#aaa', cursor: 'pointer' }}>×</button>
+        </div>
+        <div style={{ background: '#faf8f5', borderRadius: 10, padding: 14, marginBottom: 16 }}>
+          <div style={{ fontSize: 10, color: '#aaa', fontFamily: "'Inconsolata',monospace", letterSpacing: '0.08em', marginBottom: 10 }}>LOG TODAY'S PERFORMANCE</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input type="number" placeholder="Reps completed" value={reps} onChange={e => setReps(e.target.value)} style={{ flex: 1, padding: '8px 12px', borderRadius: 6, border: '1px solid #e0dcd6', fontFamily: "'Inconsolata',monospace", fontSize: 13, outline: 'none' }} />
+            <button onClick={handleSave} disabled={saving} style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: accent, color: '#1a1a1a', fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 12, cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? '…' : 'SAVE'}</button>
+          </div>
+          <input type="text" placeholder="Note (optional)" value={note} onChange={e => setNote(e.target.value)} style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #e0dcd6', fontFamily: "'Inconsolata',monospace", fontSize: 12, outline: 'none', boxSizing: 'border-box' }} />
+        </div>
+        {sorted.length === 0
+          ? <div style={{ textAlign: 'center', color: '#ccc', fontSize: 13, fontFamily: "'Inconsolata',monospace", padding: '20px 0' }}>No records yet. Log your first set!</div>
+          : sorted.map((pr, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0ede8' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {pr.reps === best && i === sorted.findIndex(p => p.reps === best) && <span style={{ fontSize: 10, background: accent + '22', color: accent, padding: '2px 7px', borderRadius: 4, fontFamily: "'Inconsolata',monospace", fontWeight: 600 }}>🏆 BEST</span>}
+                <div>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#1a1a1a', fontFamily: "'Inconsolata',monospace" }}>{pr.reps}</span>
+                  <span style={{ fontSize: 12, color: '#aaa', fontFamily: "'Inconsolata',monospace" }}> reps</span>
+                  {pr.note && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{pr.note}</div>}
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: '#bbb', fontFamily: "'Inconsolata',monospace" }}>{new Date(pr.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</div>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SETTINGS PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+function SettingsPanel({ customReps, onSave, onClose, accent }) {
+  const [local, setLocal] = useState({ ...customReps });
+  const unique = DAYS.flatMap(d => d.exercises).filter((e, i, arr) => arr.findIndex(x => x.name === e.name) === i);
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div style={{ background: '#fff', borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 640, padding: '24px 20px 40px', maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 10, color: accent, fontFamily: "'Inconsolata',monospace", letterSpacing: '0.1em', fontWeight: 600 }}>SETTINGS</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#1a1a1a', marginTop: 2 }}>Rep Targets</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 22, color: '#aaa', cursor: 'pointer' }}>×</button>
+        </div>
+        <p style={{ fontSize: 12, color: '#aaa', fontFamily: "'Inconsolata',monospace", marginBottom: 16, lineHeight: 1.6 }}>Leave blank to use the program default.</p>
+        {unique.map(ex => (
+          <div key={ex.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid #f0ede8' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{ex.name}</div>
+              <div style={{ fontSize: 10, color: '#bbb', fontFamily: "'Inconsolata',monospace" }}>default: {ex.reps}</div>
+            </div>
+            <input type="text" placeholder={ex.reps} value={local[ex.name] || ''} onChange={e => setLocal(p => ({ ...p, [ex.name]: e.target.value }))} style={{ width: 80, padding: '6px 10px', borderRadius: 6, border: `1px solid ${local[ex.name] ? accent : '#e0dcd6'}`, fontFamily: "'Inconsolata',monospace", fontSize: 13, textAlign: 'center', outline: 'none' }} />
+          </div>
+        ))}
+        <button onClick={() => { onSave(local); onClose(); }} style={{ marginTop: 20, width: '100%', padding: 12, borderRadius: 8, border: 'none', background: accent, color: '#1a1a1a', fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>SAVE SETTINGS</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOGIN SCREEN
+// ─────────────────────────────────────────────────────────────────────────────
+function LoginScreen({ onLogin }) {
+  const [loading, setLoading] = useState(false); const [error, setError] = useState('');
+  const handleGoogle = async () => {
+    setLoading(true); setError('');
+    try {
+      const result = await signInWithPopup(auth, provider);
+      onLogin(result.user);
+    } catch (e) { setError('Sign-in failed. Please try again.'); setLoading(false); }
+  };
+  return (
+    <div style={{ minHeight: '100vh', background: '#f7f4ef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Syne',sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Inconsolata:wght@400;500&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
+      <div style={{ textAlign: 'center', padding: '40px 24px', maxWidth: 340 }}>
+        <div style={{ fontWeight: 800, fontSize: 48, letterSpacing: '-0.03em', color: '#1a1a1a', lineHeight: 1 }}>Wikly</div>
+        <div style={{ fontSize: 11, color: '#aaa', letterSpacing: '0.15em', fontFamily: "'Inconsolata',monospace", marginTop: 6, marginBottom: 40 }}>BUILT WITH SCIENCE · HOME GYM</div>
+        <button onClick={handleGoogle} disabled={loading} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 24px', borderRadius: 10, border: '1.5px solid #e0dcd6', background: '#fff', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, color: '#1a1a1a', width: '100%', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s', opacity: loading ? 0.7 : 1 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+          {loading ? 'Signing in…' : 'Continue with Google'}
+        </button>
+        {error && <div style={{ marginTop: 12, fontSize: 12, color: '#E8533F', fontFamily: "'Inconsolata',monospace" }}>{error}</div>}
+        <p style={{ fontSize: 11, color: '#ccc', fontFamily: "'Inconsolata',monospace", marginTop: 24, lineHeight: 1.7 }}>Your PRs, ratings and settings sync across all your devices.</p>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN APP
+// ─────────────────────────────────────────────────────────────────────────────
 export default function BWS() {
+  const [user, setUser] = useState(undefined); // undefined = loading
   const [activeDay, setActiveDay] = useState(0);
   const [completed, setCompleted] = useState({});
   const [expanded, setExpanded] = useState({});
   const [timerTrigger, setTimerTrigger] = useState(0);
+  const [difficulty, setDifficulty] = useState({});
+  const [prs, setPrs] = useState({});
+  const [customReps, setCustomReps] = useState({});
+  const [prModal, setPrModal] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [notifGranted, setNotifGranted] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   const day = DAYS[activeDay];
+
+  // Auth state listener
+  useEffect(() => {
+    registerSW();
+    if ('Notification' in window && Notification.permission === 'granted') setNotifGranted(true);
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      setUser(u);
+      if (u) {
+        // Load user data from Firestore
+        const data = await loadUserData(u.uid);
+        if (data.difficulty) setDifficulty(data.difficulty);
+        if (data.customReps) setCustomReps(data.customReps);
+        // Load PRs for all exercises
+        const allNames = DAYS.flatMap(d => d.exercises.map(e => e.name)).filter((n, i, arr) => arr.indexOf(n) === i);
+        const prData = {};
+        await Promise.all(allNames.map(async name => { prData[name] = await loadPRs(u.uid, name); }));
+        setPrs(prData);
+        setDataLoaded(true);
+      } else { setDataLoaded(false); }
+    });
+    return unsub;
+  }, []);
+
+  const handleLogout = async () => { await signOut(auth); setShowUserMenu(false); };
 
   const toggleSet = (ei, si) => {
     const k = `${activeDay}-${ei}-${si}`;
@@ -393,18 +460,42 @@ export default function BWS() {
   const toggleExpand = (ei) => setExpanded(p => ({ ...p, [`${activeDay}-${ei}`]: !p[`${activeDay}-${ei}`] }));
   const isExpanded = (ei) => !!expanded[`${activeDay}-${ei}`];
 
+  const saveDifficulty = async (exName, val) => {
+    const next = { ...difficulty, [exName]: val };
+    setDifficulty(next);
+    if (user) await saveUserField(user.uid, 'difficulty', next);
+  };
+
+  const savePRLocal = async (exName, pr) => {
+    if (user) await addPR(user.uid, exName, pr);
+    setPrs(p => ({ ...p, [exName]: [pr, ...(p[exName] || [])] }));
+  };
+
+  const saveCustomReps = async (reps) => {
+    setCustomReps(reps);
+    if (user) await saveUserField(user.uid, 'customReps', reps);
+  };
+
   const totalSets = day.exercises.reduce((s, e) => s + e.sets, 0);
   const doneSets = day.exercises.reduce((s, e, ei) =>
     s + Array.from({ length: e.sets }, (_, si) => isSetDone(ei, si) ? 1 : 0).reduce((a, b) => a + b, 0), 0);
   const pct = totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0;
 
+  // Loading state
+  if (user === undefined) return (
+    <div style={{ minHeight: '100vh', background: '#f7f4ef', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ fontFamily: "'Inconsolata',monospace", color: '#aaa', fontSize: 13, letterSpacing: '0.1em' }}>LOADING…</div>
+    </div>
+  );
+
+  if (!user) return <LoginScreen onLogin={() => { }} />;
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f7f4ef", fontFamily: "'Syne', sans-serif", overflowX: "hidden" }}>
+    <div style={{ minHeight: '100vh', background: '#f7f4ef', fontFamily: "'Syne',sans-serif", overflowX: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inconsolata:wght@300;400;500&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: #ccc; }
+        ::-webkit-scrollbar { width: 3px; } ::-webkit-scrollbar-thumb { background: #ccc; }
         .day-tab { cursor: pointer; transition: all 0.18s ease; border: none; }
         .day-tab:hover { transform: translateY(-1px); }
         .set-btn { cursor: pointer; transition: all 0.12s; border: none; }
@@ -418,27 +509,49 @@ export default function BWS() {
         .detail-panel { animation: slideDown 0.18s ease; }
         @keyframes grow { from { width: 0 } to { width: var(--w) } }
         .prog-bar { animation: grow 0.5s ease forwards; }
+        .icon-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 6px; transition: background 0.15s; }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); }
       `}</style>
 
       {/* Header */}
-      <div style={{ background: "#1a1a1a", padding: "28px 20px 24px", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 20px rgba(0,0,0,0.15)" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ background: '#1a1a1a', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 20px rgba(0,0,0,0.15)' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div>
-              <div style={{ fontWeight: 800, fontSize: "clamp(22px,5vw,32px)", color: "#fff", letterSpacing: "-0.02em" }}>Built With Science</div>
-              <div style={{ fontSize: 11, color: "#666", letterSpacing: "0.12em", marginTop: 2, fontFamily: "'Inconsolata', monospace" }}>BEGINNER PROGRAM · ADAPTED FOR HOME GYM</div>
+              <div style={{ fontWeight: 800, fontSize: 'clamp(18px,4vw,26px)', color: '#fff', letterSpacing: '-0.02em', lineHeight: 1 }}>Wikly</div>
+              <div style={{ fontSize: 9, color: '#555', letterSpacing: '0.12em', fontFamily: "'Inconsolata',monospace" }}>BUILT WITH SCIENCE</div>
             </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 24, fontWeight: 800, color: day.accent, fontFamily: "'Inconsolata', monospace" }}>{pct}%</div>
-              <div style={{ fontSize: 10, color: "#555", fontFamily: "'Inconsolata', monospace" }}>{doneSets}/{totalSets} sets done</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {!notifGranted && (
+                <button className="icon-btn" title="Enable notifications" onClick={async () => setNotifGranted(await requestNotificationPermission())} style={{ fontSize: 18, color: '#666' }}>🔔</button>
+              )}
+              <button className="icon-btn" onClick={() => setShowSettings(true)} style={{ fontSize: 18, color: '#666' }}>⚙️</button>
+              <div style={{ position: 'relative' }}>
+                <button className="icon-btn" onClick={() => setShowUserMenu(v => !v)} style={{ padding: 0 }}>
+                  {user.photoURL
+                    ? <img src={user.photoURL} alt={user.displayName} style={{ width: 32, height: 32, borderRadius: '50%', border: `2px solid ${day.accent}`, display: 'block' }} />
+                    : <div style={{ width: 32, height: 32, borderRadius: '50%', background: day.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13, color: '#1a1a1a' }}>{user.displayName?.[0]}</div>}
+                </button>
+                {showUserMenu && (
+                  <div style={{ position: 'absolute', right: 0, top: 40, background: '#fff', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.15)', padding: '8px 0', minWidth: 180, zIndex: 300 }}>
+                    <div style={{ padding: '8px 14px', fontSize: 12, fontWeight: 700, color: '#1a1a1a', borderBottom: '1px solid #f0ede8' }}>{user.displayName}</div>
+                    <div style={{ padding: '6px 14px', fontSize: 11, color: '#aaa', fontFamily: "'Inconsolata',monospace", borderBottom: '1px solid #f0ede8' }}>{user.email}</div>
+                    <button onClick={handleLogout} style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#E8533F', fontFamily: "'Syne',sans-serif", fontWeight: 600 }}>Sign out</button>
+                  </div>
+                )}
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: day.accent, fontFamily: "'Inconsolata',monospace", lineHeight: 1 }}>{pct}%</div>
+                <div style={{ fontSize: 9, color: '#555', fontFamily: "'Inconsolata',monospace" }}>{doneSets}/{totalSets}</div>
+              </div>
             </div>
           </div>
-          <div style={{ marginTop: 14, height: 3, background: "#2e2e2e", borderRadius: 2, overflow: "hidden" }}>
-            <div className="prog-bar" key={`${activeDay}-${doneSets}`} style={{ height: "100%", background: day.accent, borderRadius: 2, "--w": `${pct}%` }} />
+          <div style={{ height: 3, background: '#2e2e2e', borderRadius: 2, overflow: 'hidden', marginBottom: 10 }}>
+            <div className="prog-bar" key={`${activeDay}-${doneSets}`} style={{ height: '100%', background: day.accent, borderRadius: 2, '--w': `${pct}%` }} />
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 16, overflowX: "auto", paddingBottom: 2 }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
             {DAYS.map((d, i) => (
-              <button key={d.id} className="day-tab" onClick={() => setActiveDay(i)} style={{ padding: "8px 14px", background: activeDay === i ? d.accent : "#2a2a2a", color: activeDay === i ? "#1a1a1a" : "#888", borderRadius: 6, fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: "0.06em", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <button key={d.id} className="day-tab" onClick={() => setActiveDay(i)} style={{ padding: '7px 12px', background: activeDay === i ? d.accent : '#2a2a2a', color: activeDay === i ? '#1a1a1a' : '#888', borderRadius: 6, fontFamily: "'Syne',sans-serif", fontWeight: 700, fontSize: 11, letterSpacing: '0.06em', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {d.label}
               </button>
             ))}
@@ -447,71 +560,84 @@ export default function BWS() {
       </div>
 
       {/* Session header */}
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "20px 20px 0" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontWeight: 800, fontSize: "clamp(26px,6vw,40px)", color: "#1a1a1a", letterSpacing: "-0.03em", lineHeight: 1 }}>{day.sublabel}</div>
-          <div style={{ height: 3, flex: 1, minWidth: 40, background: day.accent, borderRadius: 2, marginBottom: 6 }} />
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '16px 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ fontWeight: 800, fontSize: 'clamp(24px,6vw,38px)', color: '#1a1a1a', letterSpacing: '-0.03em', lineHeight: 1 }}>{day.sublabel}</div>
+          <div style={{ height: 3, flex: 1, minWidth: 40, background: day.accent, borderRadius: 2, marginBottom: 4 }} />
         </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-          {day.muscles.map(m => (
-            <span key={m} style={{ fontSize: 10, padding: "3px 10px", background: day.accent + "22", color: day.accent, borderRadius: 20, fontFamily: "'Inconsolata', monospace", fontWeight: 500, letterSpacing: "0.05em" }}>{m}</span>
-          ))}
+        <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+          {day.muscles.map(m => <span key={m} style={{ fontSize: 10, padding: '3px 10px', background: day.accent + '22', color: day.accent, borderRadius: 20, fontFamily: "'Inconsolata',monospace", fontWeight: 500, letterSpacing: '0.05em' }}>{m}</span>)}
         </div>
       </div>
 
       {/* Exercises */}
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "16px 20px 120px" }}>
-
-        {/* Rest Timer — floats fixed at bottom */}
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '14px 20px 120px' }}>
         <RestTimer triggerCount={timerTrigger} accent={day.accent} />
+
+        {!dataLoaded && (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: '#bbb', fontSize: 12, fontFamily: "'Inconsolata',monospace" }}>Loading your data…</div>
+        )}
 
         {day.exercises.map((ex, ei) => {
           const allDone = Array.from({ length: ex.sets }, (_, si) => isSetDone(ei, si)).every(Boolean);
           const open = isExpanded(ei);
           const validVideos = (ex.videos || []).filter(v => getYouTubeId(v));
+          const displayReps = customReps[ex.name] || ex.reps;
+          const exPrs = prs[ex.name] || [];
+          const bestPR = exPrs.length ? Math.max(...exPrs.map(p => p.reps)) : null;
+
           return (
-            <div key={ei} className="ex-card" style={{ background: "#fff", borderRadius: 10, marginBottom: 10, overflow: "hidden", border: `1px solid ${allDone ? day.accent + "55" : "#e8e4dd"}`, opacity: allDone ? 0.65 : 1 }}>
-              <div style={{ padding: "14px 16px 12px", display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <div key={ei} className="ex-card" style={{ background: '#fff', borderRadius: 10, marginBottom: 10, overflow: 'hidden', border: `1px solid ${allDone ? day.accent + '55' : '#e8e4dd'}`, opacity: allDone ? 0.65 : 1 }}>
+              <div style={{ padding: '14px 16px 12px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     {allDone && <span style={{ fontSize: 13, color: day.accent }}>✓</span>}
-                    <span style={{ fontWeight: 700, fontSize: 15, color: "#1a1a1a", textDecoration: allDone ? "line-through" : "none", letterSpacing: "-0.01em" }}>{ex.name}</span>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: '#1a1a1a', textDecoration: allDone ? 'line-through' : 'none', letterSpacing: '-0.01em' }}>{ex.name}</span>
                   </div>
-                  <div style={{ display: "flex", gap: 8, marginTop: 5, flexWrap: "wrap", alignItems: "center" }}>
-                    <span style={{ fontSize: 10, fontFamily: "'Inconsolata', monospace", background: "#f0ede8", color: "#666", padding: "2px 8px", borderRadius: 4 }}>{ex.equipment}</span>
-                    <span style={{ fontSize: 11, color: "#999", fontFamily: "'Inconsolata', monospace" }}>{ex.sets} sets · {ex.reps} reps</span>
-                    {validVideos.length > 0 && (
-                      <span style={{ fontSize: 9, fontFamily: "'Inconsolata', monospace", background: "#fff5f5", color: "#E8533F", padding: "2px 7px", borderRadius: 4 }}>▶ {validVideos.length} video{validVideos.length > 1 ? "s" : ""}</span>
-                    )}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, fontFamily: "'Inconsolata',monospace", background: '#f0ede8', color: '#666', padding: '2px 8px', borderRadius: 4 }}>{ex.equipment}</span>
+                    <span style={{ fontSize: 11, color: customReps[ex.name] ? day.accent : '#999', fontFamily: "'Inconsolata',monospace", fontWeight: customReps[ex.name] ? 600 : 400 }}>
+                      {ex.sets} sets · {displayReps} reps{customReps[ex.name] ? <span style={{ color: '#bbb', fontWeight: 400 }}> (custom)</span> : ''}
+                    </span>
+                    {validVideos.length > 0 && <span style={{ fontSize: 9, fontFamily: "'Inconsolata',monospace", background: '#fff5f5', color: '#E8533F', padding: '2px 7px', borderRadius: 4 }}>▶ {validVideos.length} video{validVideos.length > 1 ? 's' : ''}</span>}
+                    {bestPR && <span style={{ fontSize: 9, fontFamily: "'Inconsolata',monospace", background: day.accent + '18', color: day.accent, padding: '2px 7px', borderRadius: 4 }}>🏆 {bestPR} reps</span>}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 2, flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: 5, alignItems: 'center', paddingTop: 2, flexShrink: 0 }}>
                   {Array.from({ length: ex.sets }, (_, si) => (
-                    <button key={si} className="set-btn" onClick={() => toggleSet(ei, si)} style={{ width: 28, height: 28, borderRadius: "50%", background: isSetDone(ei, si) ? day.accent : "#f0ede8", color: isSetDone(ei, si) ? "#1a1a1a" : "#aaa", fontFamily: "'Inconsolata', monospace", fontWeight: 600, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {isSetDone(ei, si) ? "✓" : si + 1}
+                    <button key={si} className="set-btn" onClick={() => toggleSet(ei, si)} style={{ width: 28, height: 28, borderRadius: '50%', background: isSetDone(ei, si) ? day.accent : '#f0ede8', color: isSetDone(ei, si) ? '#1a1a1a' : '#aaa', fontFamily: "'Inconsolata',monospace", fontWeight: 600, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {isSetDone(ei, si) ? '✓' : si + 1}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <button className="expand-btn" onClick={() => toggleExpand(ei)} style={{ width: "100%", padding: "7px 16px", background: "#faf8f5", borderTop: "1px solid #f0ede8", display: "flex", alignItems: "center", gap: 6, color: "#888", fontSize: 11, fontFamily: "'Inconsolata', monospace", letterSpacing: "0.08em", textAlign: "left" }}>
-                <span style={{ display: "inline-block", transform: open ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>▶</span>
-                {open ? "HIDE DETAILS" : `HOW TO DO IT${validVideos.length > 0 ? " + VIDEOS" : ""} + GOTCHAS`}
+              {/* Difficulty + PR */}
+              <div style={{ padding: '8px 16px', borderTop: '1px solid #f0ede8', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, background: '#fdfcfa' }}>
+                <DifficultyRating value={difficulty[ex.name] || 0} onChange={v => saveDifficulty(ex.name, v)} accent={day.accent} />
+                <button onClick={() => setPrModal(ex.name)} style={{ background: 'none', border: `1px solid ${day.accent}44`, borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 10, fontFamily: "'Inconsolata',monospace", color: day.accent, fontWeight: 600, letterSpacing: '0.06em' }}>
+                  {exPrs.length > 0 ? `${exPrs.length} RECORD${exPrs.length > 1 ? 'S' : ''}` : '+ LOG PR'}
+                </button>
+              </div>
+
+              <button className="expand-btn" onClick={() => toggleExpand(ei)} style={{ width: '100%', padding: '7px 16px', background: '#faf8f5', borderTop: '1px solid #f0ede8', display: 'flex', alignItems: 'center', gap: 6, color: '#888', fontSize: 11, fontFamily: "'Inconsolata',monospace", letterSpacing: '0.08em', textAlign: 'left' }}>
+                <span style={{ display: 'inline-block', transform: open ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}>▶</span>
+                {open ? 'HIDE DETAILS' : `HOW TO DO IT${validVideos.length > 0 ? ' + VIDEOS' : ''} + GOTCHAS`}
               </button>
 
               {open && (
-                <div className="detail-panel" style={{ padding: "16px", borderTop: "1px solid #f0ede8", background: "#fdfcfa" }}>
+                <div className="detail-panel" style={{ padding: '16px', borderTop: '1px solid #f0ede8', background: '#fdfcfa' }}>
                   <VideoCarousel videos={ex.videos} accent={day.accent} />
                   <div style={{ marginBottom: 14 }}>
-                    <div style={{ fontSize: 10, letterSpacing: "0.12em", color: day.accent, fontFamily: "'Inconsolata', monospace", fontWeight: 600, marginBottom: 7 }}>HOW TO DO IT</div>
-                    <p style={{ fontSize: 13, color: "#444", lineHeight: 1.65 }}>{ex.how}</p>
+                    <div style={{ fontSize: 10, letterSpacing: '0.12em', color: day.accent, fontFamily: "'Inconsolata',monospace", fontWeight: 600, marginBottom: 7 }}>HOW TO DO IT</div>
+                    <p style={{ fontSize: 13, color: '#444', lineHeight: 1.65 }}>{ex.how}</p>
                   </div>
                   <div>
-                    <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "#E8533F", fontFamily: "'Inconsolata', monospace", fontWeight: 600, marginBottom: 7 }}>⚠ WATCH OUT FOR</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.12em', color: '#E8533F', fontFamily: "'Inconsolata',monospace", fontWeight: 600, marginBottom: 7 }}>⚠ WATCH OUT FOR</div>
                     {ex.gotchas.map((g, gi) => (
                       <div key={gi} className="gotcha-item">
-                        <span style={{ flexShrink: 0, width: 18, height: 18, background: "#fde8e5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#E8533F", fontWeight: 700, marginTop: 1 }}>!</span>
-                        <span style={{ fontSize: 12.5, color: "#555", lineHeight: 1.55 }}>{g}</span>
+                        <span style={{ flexShrink: 0, width: 18, height: 18, background: '#fde8e5', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#E8533F', fontWeight: 700, marginTop: 1 }}>!</span>
+                        <span style={{ fontSize: 12.5, color: '#555', lineHeight: 1.55 }}>{g}</span>
                       </div>
                     ))}
                   </div>
@@ -521,12 +647,15 @@ export default function BWS() {
           );
         })}
 
-        <div style={{ marginTop: 8, padding: "14px 16px", background: "#fff", borderRadius: 10, border: "1px solid #e8e4dd", fontSize: 11.5, color: "#888", lineHeight: 1.7, fontFamily: "'Inconsolata', monospace" }}>
-          <span style={{ color: "#1a1a1a", fontWeight: 600 }}>Schedule:</span> Mon → Tue → rest Wed → Thu → Fri → rest weekend<br />
-          <span style={{ color: "#1a1a1a", fontWeight: 600 }}>Warm-up:</span> 5–10 min before each session — jumping jacks, arm circles, bodyweight squats<br />
-          <span style={{ color: "#1a1a1a", fontWeight: 600 }}>When 12 reps is easy:</span> slow the reps down (3s down, 1s pause) before worrying about weight
+        <div style={{ marginTop: 8, padding: '14px 16px', background: '#fff', borderRadius: 10, border: '1px solid #e8e4dd', fontSize: 11.5, color: '#888', lineHeight: 1.7, fontFamily: "'Inconsolata',monospace" }}>
+          <span style={{ color: '#1a1a1a', fontWeight: 600 }}>Schedule:</span> Mon → Tue → rest Wed → Thu → Fri → rest weekend<br />
+          <span style={{ color: '#1a1a1a', fontWeight: 600 }}>Warm-up:</span> 5–10 min before each session — jumping jacks, arm circles, bodyweight squats<br />
+          <span style={{ color: '#1a1a1a', fontWeight: 600 }}>When 12 reps is easy:</span> slow the reps down (3s down, 1s pause) before worrying about weight
         </div>
       </div>
+
+      {prModal && <PRModal exName={prModal} prs={prs[prModal] || []} onSave={pr => savePRLocal(prModal, pr)} onClose={() => setPrModal(null)} accent={day.accent} />}
+      {showSettings && <SettingsPanel customReps={customReps} onSave={saveCustomReps} onClose={() => setShowSettings(false)} accent={day.accent} />}
     </div>
   );
 }
