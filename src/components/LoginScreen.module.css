@@ -1,0 +1,75 @@
+.root {
+  min-height: 100vh;
+  background: #f7f4ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+}
+
+.card {
+  text-align: center;
+  padding: 40px 24px;
+  max-width: 340px;
+  width: 100%;
+}
+
+.appName {
+  font-weight: 800;
+  font-size: 48px;
+  letter-spacing: -0.03em;
+  color: #1a1a1a;
+  line-height: 1;
+}
+
+.tagline {
+  font-size: 11px;
+  color: #aaa;
+  letter-spacing: 0.15em;
+  font-family: var(--font-mono);
+  margin-top: 6px;
+  margin-bottom: 40px;
+}
+
+.googleBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  border-radius: 10px;
+  border: 1.5px solid #e0dcd6;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  width: 100%;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s, opacity 0.2s;
+  font-family: var(--font-display);
+}
+
+.googleBtn:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.googleBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #E8533F;
+  font-family: var(--font-mono);
+}
+
+.legal {
+  font-size: 11px;
+  color: #ccc;
+  font-family: var(--font-mono);
+  margin-top: 24px;
+  line-height: 1.7;
+}

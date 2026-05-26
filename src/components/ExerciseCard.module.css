@@ -1,0 +1,217 @@
+.card {
+  background: #fff;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  border: 1px solid #e8e4dd;
+  transition: box-shadow 0.2s, opacity 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.card.done {
+  opacity: 0.65;
+}
+
+/* Top row */
+.top {
+  padding: 14px 16px 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.info {
+  flex: 1;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.checkMark {
+  font-size: 13px;
+}
+
+.name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+}
+
+.name.strikethrough {
+  text-decoration: line-through;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.equipBadge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  background: #f0ede8;
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.repsBadge {
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.repsBadge.custom {
+  font-weight: 600;
+}
+
+.customLabel {
+  color: #bbb;
+  font-weight: 400;
+}
+
+.videoBadge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  background: #fff5f5;
+  color: #E8533F;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.prBadge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* Set buttons */
+.sets {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Difficulty + PR row */
+.footer {
+  padding: 8px 16px;
+  border-top: 1px solid #f0ede8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #fdfcfa;
+}
+
+.prHint {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+/* Expand toggle */
+.expandToggle {
+  width: 100%;
+  padding: 7px 16px;
+  background: #faf8f5;
+  border: none;
+  border-top: 1px solid #f0ede8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #888;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-align: left;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.expandToggle:hover {
+  opacity: 0.7;
+}
+
+.arrow {
+  display: inline-block;
+  transition: transform 0.15s;
+}
+
+.arrow.open {
+  transform: rotate(90deg);
+}
+
+/* Detail panel */
+.detail {
+  padding: 16px;
+  border-top: 1px solid #f0ede8;
+  background: #fdfcfa;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sectionLabel {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  margin-bottom: 7px;
+}
+
+.howText {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.gotchaList {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.gotchaItem {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.gotchaIcon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  background: #fde8e5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #E8533F;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.gotchaText {
+  font-size: 12.5px;
+  color: #555;
+  line-height: 1.55;
+}

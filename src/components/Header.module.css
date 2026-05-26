@@ -1,0 +1,196 @@
+.header {
+  background: #1a1a1a;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
+.inner {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.brand {
+  line-height: 1;
+}
+
+.appName {
+  font-weight: 800;
+  font-size: clamp(18px, 4vw, 26px);
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.appSub {
+  font-size: 9px;
+  color: #555;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Icon buttons */
+.iconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  font-size: 18px;
+  color: #666;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Avatar */
+.avatarWrapper {
+  position: relative;
+}
+
+.avatarImg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: block;
+}
+
+.avatarFallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a1a1a;
+}
+
+/* User dropdown */
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 180px;
+  z-index: 300;
+}
+
+.dropdownName {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0ede8;
+}
+
+.dropdownEmail {
+  padding: 6px 14px;
+  font-size: 11px;
+  color: #aaa;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid #f0ede8;
+}
+
+.signOutBtn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: #E8533F;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* Progress */
+.pct {
+  text-align: right;
+}
+
+.pctValue {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.pctSub {
+  font-size: 9px;
+  color: #555;
+  font-family: var(--font-mono);
+}
+
+.progressBar {
+  height: 3px;
+  background: #2e2e2e;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+  animation: grow 0.5s ease forwards;
+}
+
+@keyframes grow {
+  from { width: 0; }
+  to   { width: var(--w); }
+}
+
+/* Day tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  padding: 7px 12px;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.tab:hover {
+  transform: translateY(-1px);
+}

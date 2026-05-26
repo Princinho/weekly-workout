@@ -1,0 +1,125 @@
+.container {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 640px;
+  z-index: 200;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.container.idle {
+  background: #f0ede8;
+  border: 1.5px solid #ddd8d0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.container.active {
+  background: #1a1a1a;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* ring */
+.ring {
+  flex-shrink: 0;
+  position: relative;
+  width: 52px;
+  height: 52px;
+}
+
+.ring svg {
+  transform: rotate(-90deg);
+}
+
+.ringLabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* info */
+.info {
+  flex: 1;
+}
+
+.status {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adjustBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid #ddd8d0;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.durLabel {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  min-width: 36px;
+  text-align: center;
+}
+
+/* action buttons */
+.actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btnStart,
+.btnStop,
+.btnReset {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnStart {
+  padding: 6px 12px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.btnStop {
+  background: #2e2e2e;
+  color: #ccc;
+}
+
+.btnReset {
+  border: 1px solid #ddd8d0;
+  background: transparent;
+  color: #aaa;
+}
