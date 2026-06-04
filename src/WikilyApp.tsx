@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 
@@ -6,14 +6,15 @@ import { auth, loadUserData, saveUserField, loadPRsForExercise, addPRForSet } fr
 import { registerSW } from './lib/sw'
 import { loadCompleted, saveCompleted, pruneOldCompleted } from './lib/storage'
 import { DAYS } from './data/workout'
-import type { PR, PRMap, DifficultyMap, CustomRepsMap, CompletedMap } from './types'
+import type { PR, PRMap, DifficultyMap, CustomRepsMap, CustomSetsMap, CompletedMap } from './types'
 
-import { Header }        from './components/Header'
-import { RestTimer }     from './components/RestTimer'
-import { ExerciseCard }  from './components/ExerciseCard'
-import { PRModal }       from './components/PRModal'
-import { SettingsPanel } from './components/SettingsPanel'
-import { LoginScreen }   from './components/LoginScreen'
+import { Header }                 from './components/Header'
+import { RestTimer }              from './components/RestTimer'
+import { ExerciseCard }           from './components/ExerciseCard'
+import { PRModal }                from './components/PRModal'
+import { ExerciseSettingsModal }  from './components/ExerciseSettingsModal'
+import { LoginScreen }            from './components/LoginScreen'
+import { WorkoutConfetti }        from './components/WorkoutConfetti'
 
 import css from './App.module.css'
 
@@ -39,12 +40,15 @@ export default function App() {
   const [difficulty,   setDifficulty]   = useState<DifficultyMap>({})
   const [prs,          setPrs]          = useState<PRMap>({})
   const [customReps,   setCustomReps]   = useState<CustomRepsMap>({})
+  const [customSets,   setCustomSets]   = useState<CustomSetsMap>({})
   const [prModal,      setPrModal]      = useState<{ exName: string; setIndex: number } | null>(null)
-  const [showSettings, setShowSettings] = useState(false)
-  const [notifGranted, setNotifGranted] = useState(false)
+  const [settingsEx,   setSettingsEx]   = useState<string | null>(null)
   const [dataLoaded,   setDataLoaded]   = useState(false)
+  const [notifGranted, setNotifGranted] = useState(false)
 
   const day = DAYS[activeDay]
+  const prevDoneRef = useRef(false)
+  const prevActiveDayRef = useRef(activeDay)
 
   useEffect(() => {
     registerSW()
@@ -61,13 +65,15 @@ export default function App() {
         const data = await loadUserData(u.uid)
         if (data.difficulty) setDifficulty(data.difficulty)
         if (data.customReps) setCustomReps(data.customReps)
+        if (data.customSets) setCustomSets(data.customSets)
 
         const uniqueExercises = [
           ...new Map(DAYS.flatMap(d => d.exercises).map(e => [e.name, e])).values()
         ]
         const prData: PRMap = {}
         await Promise.all(uniqueExercises.map(async ex => {
-          prData[ex.name] = await loadPRsForExercise(u.uid, ex.name, ex.sets)
+          const numSets = Math.max(ex.sets, data.customSets?.[ex.name] ?? 0)
+          prData[ex.name] = await loadPRsForExercise(u.uid, ex.name, numSets)
         }))
         setPrs(prData)
         setDataLoaded(true)
@@ -104,27 +110,62 @@ export default function App() {
     })
   }
 
-  const saveCustomReps = async (reps: CustomRepsMap) => {
-    const cleaned = Object.fromEntries(
-      Object.entries(reps).filter(([, v]) => String(v ?? '').trim() !== '')
-    )
-    setCustomReps(cleaned)
-    if (user) await saveUserField(user.uid, 'customReps', cleaned)
+  const saveExerciseSettings = async (exName: string, reps: string, sets: number | undefined) => {
+    const nextReps = { ...customReps }
+    const nextSets = { ...customSets }
+
+    if (reps.trim()) nextReps[exName] = reps.trim()
+    else delete nextReps[exName]
+
+    if (sets !== undefined) nextSets[exName] = sets
+    else delete nextSets[exName]
+
+    setCustomReps(nextReps)
+    setCustomSets(nextSets)
+    if (user) {
+      await saveUserField(user.uid, 'customReps', nextReps)
+      await saveUserField(user.uid, 'customSets', nextSets)
+    }
   }
 
-  const totalSets = day.exercises.reduce((s, e) => s + e.sets, 0)
-  const doneSets  = day.exercises.reduce((s, e, ei) =>
-    s + Array.from({ length: e.sets }, (_, si) => (isSetDone(ei, si) ? 1 : 0) as number)
-        .reduce((a, b) => a + b, 0), 0)
+  // Progress for current day
+  const totalSets = day.exercises.reduce((s, e) => s + (customSets[e.name] ?? e.sets), 0)
+  const doneSets  = day.exercises.reduce((s, e, ei) => {
+    const n = customSets[e.name] ?? e.sets
+    return s + Array.from({ length: n }, (_, si) => (isSetDone(ei, si) ? 1 : 0) as number)
+      .reduce((a, b) => a + b, 0)
+  }, 0)
 
-  if (user === undefined) {
-    return <div className={css.loading}>LOADING...</div>
-  }
+  const workoutComplete = totalSets > 0 && doneSets === totalSets
+  const [showConfetti, setShowConfetti] = useState(false)
 
+  useEffect(() => {
+    if (workoutComplete && !prevDoneRef.current) {
+      setShowConfetti(true)
+      setTimeout(() => setShowConfetti(false), 5000)
+    }
+    prevDoneRef.current = workoutComplete
+  }, [workoutComplete])
+
+  useEffect(() => {
+    if (activeDay !== prevActiveDayRef.current) {
+      prevActiveDayRef.current = activeDay
+      prevDoneRef.current = workoutComplete
+      setShowConfetti(false)
+    }
+  }, [activeDay, workoutComplete])
+
+  if (user === undefined) return <div className={css.loading}>LOADING...</div>
   if (!user) return <LoginScreen />
+
+  const settingsExercise = settingsEx
+    ? DAYS.flatMap(d => d.exercises).find(e => e.name === settingsEx) ?? null
+    : null
 
   return (
     <div className={css.root}>
+      {showConfetti && <WorkoutConfetti accent={day.accent} />}
+
       <Header
         user={user}
         activeDay={activeDay}
@@ -133,7 +174,6 @@ export default function App() {
         notifGranted={notifGranted}
         onDayChange={setActiveDay}
         onNotifGranted={setNotifGranted}
-        onShowSettings={() => setShowSettings(true)}
       />
 
       <div className={css.sessionHeader}>
@@ -163,11 +203,13 @@ export default function App() {
             exerciseIndex={ei}
             accent={day.accent}
             customReps={customReps[ex.name] ?? ''}
+            customSets={customSets[ex.name]}
             prs={prs[ex.name] ?? []}
             difficulty={difficulty[ex.name] ?? 0}
             isSetDone={si => isSetDone(ei, si)}
             onToggleSet={si => toggleSet(ei, si)}
             onOpenPR={si => setPrModal({ exName: ex.name, setIndex: si })}
+            onOpenSettings={() => setSettingsEx(ex.name)}
             onDifficultyChange={v => saveDifficulty(ex.name, v)}
           />
         ))}
@@ -190,12 +232,16 @@ export default function App() {
         />
       )}
 
-      {showSettings && (
-        <SettingsPanel
-          customReps={customReps}
+      {settingsEx && settingsExercise && (
+        <ExerciseSettingsModal
+          exName={settingsEx}
+          defaultSets={settingsExercise.sets}
+          defaultReps={settingsExercise.reps}
+          currentSets={customSets[settingsEx]}
+          currentReps={customReps[settingsEx] ?? ''}
           accent={day.accent}
-          onSave={saveCustomReps}
-          onClose={() => setShowSettings(false)}
+          onSave={(reps, sets) => saveExerciseSettings(settingsEx, reps, sets)}
+          onClose={() => setSettingsEx(null)}
         />
       )}
     </div>

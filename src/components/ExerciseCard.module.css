@@ -215,3 +215,27 @@
   color: #555;
   line-height: 1.55;
 }
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settingsBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #ccc;
+  padding: 2px 4px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.settingsBtn:hover {
+  color: #888;
+  background: #f0ede8;
+}

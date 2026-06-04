@@ -10,12 +10,13 @@ interface Props {
   exerciseIndex: number
   accent: string
   customReps: string
-  /** Per-set PR history: prs[setIndex] = PR[] */
+  customSets: number | undefined
   prs: PR[][]
   difficulty: number
   isSetDone: (si: number) => boolean
   onToggleSet: (si: number) => void
   onOpenPR: (si: number) => void
+  onOpenSettings: () => void
   onDifficultyChange: (v: number) => void
 }
 
@@ -23,18 +24,21 @@ export function ExerciseCard({
   exercise: ex,
   accent,
   customReps,
+  customSets,
   prs,
   difficulty,
   isSetDone,
   onToggleSet,
   onOpenPR,
+  onOpenSettings,
   onDifficultyChange,
 }: Props) {
   const [open, setOpen] = useState(false)
 
-  const allDone    = Array.from({ length: ex.sets }, (_, si) => isSetDone(si)).every(Boolean)
+  const numSets    = customSets ?? ex.sets
+  const allDone    = Array.from({ length: numSets }, (_, si) => isSetDone(si)).every(Boolean)
   const displayRep = (customReps?.trim()) || ex.reps
-  const isCustom   = Boolean(customReps?.trim())
+  const isCustom   = Boolean(customReps?.trim()) || customSets !== undefined
   const validVids  = ex.videos.filter(v => v.trim())
 
   const overallBest = prs.flat().length
@@ -62,7 +66,7 @@ export function ExerciseCard({
             <span className={css.equipBadge}>{ex.equipment}</span>
             <span className={[css.repsBadge, isCustom ? css.custom : ''].join(' ')}
                   style={{ color: isCustom ? accent : '#999' }}>
-              {ex.sets} sets &middot; {displayRep} reps
+              {numSets} sets &middot; {displayRep} reps
               {isCustom && <span className={css.customLabel}> (custom)</span>}
             </span>
             {validVids.length > 0 && (
@@ -77,7 +81,7 @@ export function ExerciseCard({
         </div>
 
         <div className={css.sets}>
-          {Array.from({ length: ex.sets }, (_, si) => (
+          {Array.from({ length: numSets }, (_, si) => (
             <SetButton
               key={si}
               number={si + 1}
@@ -94,11 +98,21 @@ export function ExerciseCard({
 
       <div className={css.footer}>
         <DifficultyRating value={difficulty} onChange={onDifficultyChange} accent={accent} />
-        <span className={css.prHint} style={{ color: accent + 'aa' }}>
-          {totalRecords > 0
-            ? `${totalRecords} record${totalRecords > 1 ? 's' : ''} - hold a set`
-            : 'Hold a set to log PR'}
-        </span>
+
+        <div className={css.footerRight}>
+          <span className={css.prHint} style={{ color: accent + 'aa' }}>
+            {totalRecords > 0
+              ? `${totalRecords} record${totalRecords > 1 ? 's' : ''} - hold a set`
+              : 'Hold a set to log PR'}
+          </span>
+          <button
+            className={css.settingsBtn}
+            onClick={onOpenSettings}
+            title="Configure sets & reps"
+          >
+            &#9881;
+          </button>
+        </div>
       </div>
 
       <button className={css.expandToggle} onClick={() => setOpen(o => !o)}>

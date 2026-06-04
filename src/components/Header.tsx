@@ -13,12 +13,11 @@ interface Props {
   notifGranted: boolean
   onDayChange: (i: number) => void
   onNotifGranted: (v: boolean) => void
-  onShowSettings: () => void
 }
 
 export function Header({
   user, activeDay, doneSets, totalSets,
-  notifGranted, onDayChange, onNotifGranted, onShowSettings,
+  notifGranted, onDayChange, onNotifGranted,
 }: Props) {
   const day = DAYS[activeDay]
   const pct = totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0
@@ -42,7 +41,6 @@ export function Header({
                 onClick={async () => onNotifGranted(await requestNotificationPermission())}
               >🔔</button>
             )}
-            <button className={css.iconBtn} onClick={onShowSettings}>⚙️</button>
 
             {/* Avatar + dropdown */}
             <AvatarMenu user={user} accent={day.accent} onLogout={handleLogout} />
