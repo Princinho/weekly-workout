@@ -4,7 +4,7 @@ import {
   getFirestore, doc, getDoc, setDoc,
   collection, addDoc, query, getDocs, orderBy,
 } from 'firebase/firestore'
-import type { PR, UserData } from '../types'
+import type { PR, Session, UserData } from '../types'
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,12 +16,13 @@ const firebaseConfig = {
   measurementId:     import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
 
-const app      = initializeApp(firebaseConfig)
+const app             = initializeApp(firebaseConfig)
 export const auth     = getAuth(app)
 export const db       = getFirestore(app)
 export const provider = new GoogleAuthProvider()
 
-const userDoc  = (uid: string) => doc(db, 'users', uid)
+const userDoc    = (uid: string) => doc(db, 'users', uid)
+const sessionCol = (uid: string) => collection(db, 'users', uid, 'sessions')
 
 // Path: users/{uid}/prs/{exName}/s{setIndex} = 5 segments (odd = valid collection)
 const prSetCol = (uid: string, exName: string, setIndex: number) =>
@@ -58,4 +59,15 @@ export async function addPRForSet(
   uid: string, exName: string, setIndex: number, pr: PR
 ) {
   await addDoc(prSetCol(uid, exName, setIndex), pr)
+}
+
+export async function archiveSession(uid: string, session: Session) {
+  const ref = doc(db, 'users', uid, 'sessions', session.date)
+  await setDoc(ref, session)
+}
+
+export async function loadSessions(uid: string): Promise<Session[]> {
+  const q    = query(sessionCol(uid), orderBy('date', 'asc'))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => d.data() as Session)
 }

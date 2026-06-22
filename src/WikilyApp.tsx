@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 
-import { auth, loadUserData, saveUserField, loadPRsForExercise, addPRForSet } from './lib/firebase'
+import { auth, loadUserData, saveUserField, loadPRsForExercise, addPRForSet, archiveSession } from './lib/firebase'
 import { registerSW } from './lib/sw'
 import { loadCompleted, saveCompleted, pruneOldCompleted } from './lib/storage'
 import { DAYS } from './data/workout'
-import type { PR, PRMap, DifficultyMap, CustomRepsMap, CustomSetsMap, CompletedMap } from './types'
+import type { PR, PRMap, DifficultyMap, CustomRepsMap, CustomSetsMap, CompletedMap, SessionSet } from './types'
 
 import { Header }                 from './components/Header'
 import { RestTimer }              from './components/RestTimer'
@@ -15,8 +15,13 @@ import { PRModal }                from './components/PRModal'
 import { ExerciseSettingsModal }  from './components/ExerciseSettingsModal'
 import { LoginScreen }            from './components/LoginScreen'
 import { WorkoutConfetti }        from './components/WorkoutConfetti'
+import { ProgressView }           from './components/ProgressView'
 
 import css from './App.module.css'
+
+function todayDateStr(): string {
+  return new Date().toISOString().split('T')[0]
+}
 
 function getTodayDayIndex(): number {
   const dow = new Date().getDay()
@@ -44,7 +49,8 @@ export default function App() {
   const [prModal,      setPrModal]      = useState<{ exName: string; setIndex: number } | null>(null)
   const [settingsEx,   setSettingsEx]   = useState<string | null>(null)
   const [dataLoaded,   setDataLoaded]   = useState(false)
-  const [notifGranted, setNotifGranted] = useState(false)
+  const [notifGranted,  setNotifGranted]  = useState(false)
+  const [showProgress,  setShowProgress]  = useState(false)
 
   const day = DAYS[activeDay]
   const prevDoneRef = useRef(false)
@@ -143,9 +149,34 @@ export default function App() {
     if (workoutComplete && !prevDoneRef.current) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 5000)
+
+      if (user) {
+        const today = todayDateStr()
+        const exercises = day.exercises.map((ex, ei) => {
+          const numSets = customSets[ex.name] ?? ex.sets
+          const allDone = Array.from({ length: numSets }, (_, si) =>
+            !!completed[`${activeDay}-${ei}-${si}`]
+          ).every(Boolean)
+
+          const sets = (Array.from({ length: numSets }, (_, si) => {
+            const pr = prs[ex.name]?.[si]?.find(p => p.date.startsWith(today))
+            if (!pr) return null
+            return {
+              reps: pr.reps,
+              ...(pr.weight !== undefined ? { weight: pr.weight } : {}),
+              ...(pr.note ? { note: pr.note } : {}),
+            }
+          }).filter(Boolean)) as SessionSet[]
+
+          return { name: ex.name, completed: allDone, sets }
+        })
+
+        archiveSession(user.uid, { date: today, dayIndex: activeDay, exercises })
+          .catch(err => console.error('archiveSession failed:', err))
+      }
     }
     prevDoneRef.current = workoutComplete
-  }, [workoutComplete])
+  }, [workoutComplete]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activeDay !== prevActiveDayRef.current) {
@@ -174,6 +205,7 @@ export default function App() {
         notifGranted={notifGranted}
         onDayChange={setActiveDay}
         onNotifGranted={setNotifGranted}
+        onProgressOpen={() => setShowProgress(true)}
       />
 
       <div className={css.sessionHeader}>
@@ -229,6 +261,14 @@ export default function App() {
           accent={day.accent}
           onSave={pr => savePR(prModal.exName, prModal.setIndex, pr)}
           onClose={() => setPrModal(null)}
+        />
+      )}
+
+      {showProgress && (
+        <ProgressView
+          uid={user.uid}
+          accent={day.accent}
+          onClose={() => setShowProgress(false)}
         />
       )}
 

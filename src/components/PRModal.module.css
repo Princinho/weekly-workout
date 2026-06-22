@@ -80,6 +80,18 @@
   background: #fff;
 }
 
+.inputWeight {
+  width: 64px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e0dcd6;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  text-align: center;
+}
+
 .inputNote {
   width: 100%;
   padding: 8px 12px;

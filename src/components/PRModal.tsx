@@ -13,6 +13,7 @@ interface Props {
 
 export function PRModal({ exName, setIndex, prs, accent, onSave, onClose }: Props) {
   const [reps,   setReps]   = useState('')
+  const [weight, setWeight] = useState('')
   const [note,   setNote]   = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -22,8 +23,11 @@ export function PRModal({ exName, setIndex, prs, accent, onSave, onClose }: Prop
   const handleSave = async () => {
     if (!reps) return
     setSaving(true)
-    await onSave({ reps: parseInt(reps), note, date: new Date().toISOString() })
+    const pr: PR = { reps: parseInt(reps), note, date: new Date().toISOString() }
+    if (weight) pr.weight = parseFloat(weight)
+    await onSave(pr)
     setReps('')
+    setWeight('')
     setNote('')
     setSaving(false)
   }
@@ -48,9 +52,17 @@ export function PRModal({ exName, setIndex, prs, accent, onSave, onClose }: Prop
             <input
               className={css.input}
               type="number"
-              placeholder="Reps completed"
+              placeholder="Reps"
               value={reps}
               onChange={e => setReps(e.target.value)}
+            />
+            <input
+              className={css.inputWeight}
+              type="number"
+              step="0.5"
+              placeholder="kg"
+              value={weight}
+              onChange={e => setWeight(e.target.value)}
             />
             <button
               className={css.saveBtn}
@@ -83,6 +95,9 @@ export function PRModal({ exName, setIndex, prs, accent, onSave, onClose }: Prop
                 <div>
                   <span className={css.repsVal}>{pr.reps}</span>
                   <span className={css.repsUnit}> reps</span>
+                  {pr.weight !== undefined && (
+                    <span className={css.repsUnit}> · {pr.weight}kg</span>
+                  )}
                   {pr.note && <div className={css.recordNote}>{pr.note}</div>}
                 </div>
               </div>

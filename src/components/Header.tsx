@@ -13,11 +13,12 @@ interface Props {
   notifGranted: boolean
   onDayChange: (i: number) => void
   onNotifGranted: (v: boolean) => void
+  onProgressOpen: () => void
 }
 
 export function Header({
   user, activeDay, doneSets, totalSets,
-  notifGranted, onDayChange, onNotifGranted,
+  notifGranted, onDayChange, onNotifGranted, onProgressOpen,
 }: Props) {
   const day = DAYS[activeDay]
   const pct = totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0
@@ -34,6 +35,10 @@ export function Header({
           </div>
 
           <div className={css.right}>
+            <button className={css.iconBtn} title="Progression" onClick={onProgressOpen}>
+              {'\u{1F4C8}'}
+            </button>
+
             {!notifGranted && (
               <button
                 className={css.iconBtn}

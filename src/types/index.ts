@@ -19,8 +19,27 @@ export interface Day {
 
 export interface PR {
   reps: number
+  weight?: number   // kg, optional — captured from today onwards
   note?: string
   date: string
+}
+
+export interface SessionSet {
+  reps: number
+  weight?: number
+  note?: string
+}
+
+export interface SessionExercise {
+  name: string
+  completed: boolean
+  sets: SessionSet[]
+}
+
+export interface Session {
+  date: string          // "YYYY-MM-DD"
+  dayIndex: number      // 0=Mon 1=Tue 2=Thu 3=Fri
+  exercises: SessionExercise[]
 }
 
 /** Per-exercise, per-set PR history: PRMap[exName][setIndex] = PR[] */
