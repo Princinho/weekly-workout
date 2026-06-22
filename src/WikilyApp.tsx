@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import type React from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
 import type { User } from 'firebase/auth'
 
@@ -51,10 +52,12 @@ export default function App() {
   const [dataLoaded,   setDataLoaded]   = useState(false)
   const [notifGranted,  setNotifGranted]  = useState(false)
   const [showProgress,  setShowProgress]  = useState(false)
+  const [activeExIndex, setActiveExIndex] = useState(0)
 
   const day = DAYS[activeDay]
   const prevDoneRef = useRef(false)
   const prevActiveDayRef = useRef(activeDay)
+  const touchStartX     = useRef(0)
 
   useEffect(() => {
     registerSW()
@@ -183,8 +186,20 @@ export default function App() {
       prevActiveDayRef.current = activeDay
       prevDoneRef.current = workoutComplete
       setShowConfetti(false)
+      setActiveExIndex(0)
     }
   }, [activeDay, workoutComplete])
+
+  const ex  = day.exercises[activeExIndex]
+  const nav = (dir: 1 | -1) =>
+    setActiveExIndex(i => Math.max(0, Math.min(day.exercises.length - 1, i + dir)))
+
+  const onTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX }
+  const onTouchEnd   = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    if (dx < -40) nav(1)
+    else if (dx > 40) nav(-1)
+  }
 
   if (user === undefined) return <div className={css.loading}>LOADING...</div>
   if (!user) return <LoginScreen />
@@ -228,23 +243,62 @@ export default function App() {
 
         {!dataLoaded && <div className={css.dataLoading}>Loading your data...</div>}
 
-        {day.exercises.map((ex, ei) => (
-          <ExerciseCard
-            key={ex.name}
-            exercise={ex}
-            exerciseIndex={ei}
-            accent={day.accent}
-            customReps={customReps[ex.name] ?? ''}
-            customSets={customSets[ex.name]}
-            prs={prs[ex.name] ?? []}
-            difficulty={difficulty[ex.name] ?? 0}
-            isSetDone={si => isSetDone(ei, si)}
-            onToggleSet={si => toggleSet(ei, si)}
-            onOpenPR={si => setPrModal({ exName: ex.name, setIndex: si })}
-            onOpenSettings={() => setSettingsEx(ex.name)}
-            onDifficultyChange={v => saveDifficulty(ex.name, v)}
-          />
-        ))}
+        {/* Nav dots */}
+        <div className={css.navDots}>
+          {day.exercises.map((e, i) => {
+            const n    = customSets[e.name] ?? e.sets
+            const done = Array.from({ length: n }, (_, si) => isSetDone(i, si)).every(Boolean)
+            return (
+              <button
+                key={i}
+                className={[css.navDot, i === activeExIndex ? css.navDotActive : ''].join(' ')}
+                style={{ background: done ? day.accent : i === activeExIndex ? day.accent + '66' : undefined }}
+                onClick={() => setActiveExIndex(i)}
+                title={e.name}
+              />
+            )
+          })}
+        </div>
+
+        {/* Single exercise card */}
+        <div
+          key={`${activeDay}-${activeExIndex}`}
+          className={css.slide}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          {ex && (
+            <ExerciseCard
+              exercise={ex}
+              exerciseIndex={activeExIndex}
+              accent={day.accent}
+              customReps={customReps[ex.name] ?? ''}
+              customSets={customSets[ex.name]}
+              prs={prs[ex.name] ?? []}
+              difficulty={difficulty[ex.name] ?? 0}
+              isSetDone={si => isSetDone(activeExIndex, si)}
+              onToggleSet={si => toggleSet(activeExIndex, si)}
+              onOpenPR={si => setPrModal({ exName: ex.name, setIndex: si })}
+              onOpenSettings={() => setSettingsEx(ex.name)}
+              onDifficultyChange={v => saveDifficulty(ex.name, v)}
+            />
+          )}
+        </div>
+
+        {/* Prev / Next */}
+        <div className={css.navBtns}>
+          <button
+            className={css.navBtn}
+            disabled={activeExIndex === 0}
+            onClick={() => nav(-1)}
+          >&#8592; Prev</button>
+          <span className={css.navCounter}>{activeExIndex + 1} / {day.exercises.length}</span>
+          <button
+            className={css.navBtn}
+            disabled={activeExIndex === day.exercises.length - 1}
+            onClick={() => nav(1)}
+          >Next &#8594;</button>
+        </div>
 
         <div className={css.scheduleNote}>
           <strong>Schedule:</strong> Mon - Tue - rest Wed - Thu - Fri - rest weekend<br />
