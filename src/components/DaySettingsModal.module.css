@@ -1,0 +1,139 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 640px;
+  padding: 24px 20px 40px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.title {
+  font-weight: 800;
+  font-size: 16px;
+  color: #1a1a1a;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.hint {
+  font-size: 11px;
+  color: #bbb;
+  font-family: var(--font-mono);
+  margin: 0 0 16px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #faf8f5;
+  border-radius: 8px;
+  border: 1px solid #e8e4dd;
+  transition: opacity 0.15s;
+}
+
+.row.rowDisabled {
+  opacity: 0.45;
+}
+
+.reorderBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.arrowBtn {
+  background: none;
+  border: 1px solid #e0dcd6;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #888;
+  padding: 1px 5px;
+  line-height: 1.4;
+  transition: background 0.12s;
+}
+
+.arrowBtn:hover:not(:disabled) {
+  background: #f0ede8;
+}
+
+.arrowBtn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.exName {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.toggleBtn {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: background 0.15s;
+}
+
+.toggleOn {
+  color: #1a1a1a;
+}
+
+.toggleOff {
+  background: #e0dcd6;
+  color: #aaa;
+}
+
+.saveBtn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  color: #1a1a1a;
+  letter-spacing: 0.04em;
+}

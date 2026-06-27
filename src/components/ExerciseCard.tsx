@@ -45,9 +45,10 @@ export function ExerciseCard({
     ? Math.max(...prs.flat().map(p => p.reps))
     : null
 
-  const bestPRForSet = (si: number): number | null => {
+  // Most recent PR for a given set (prs are stored newest-first)
+  const latestPRForSet = (si: number): number | null => {
     const setPrs = prs[si] ?? []
-    return setPrs.length ? Math.max(...setPrs.map(p => p.reps)) : null
+    return setPrs.length ? setPrs[0].reps : null
   }
 
   const totalRecords = prs.flat().length
@@ -87,7 +88,7 @@ export function ExerciseCard({
               number={si + 1}
               done={isSetDone(si)}
               targetReps={displayRep}
-              bestPR={bestPRForSet(si)}
+              latestPR={latestPRForSet(si)}
               accent={accent}
               onToggle={() => onToggleSet(si)}
               onLongPress={() => onOpenPR(si)}

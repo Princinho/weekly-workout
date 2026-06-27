@@ -8,17 +8,25 @@ interface Props {
   prs: PR[]
   accent: string
   onSave: (pr: PR) => Promise<void>
+  onDelete: (prId: string) => Promise<void>
   onClose: () => void
 }
 
-export function PRModal({ exName, setIndex, prs, accent, onSave, onClose }: Props) {
-  const [reps,   setReps]   = useState('')
-  const [weight, setWeight] = useState('')
-  const [note,   setNote]   = useState('')
-  const [saving, setSaving] = useState(false)
+export function PRModal({ exName, setIndex, prs, accent, onSave, onDelete, onClose }: Props) {
+  const [reps,     setReps]     = useState('')
+  const [weight,   setWeight]   = useState('')
+  const [note,     setNote]     = useState('')
+  const [saving,   setSaving]   = useState(false)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   const sorted = [...prs].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const best   = prs.length ? Math.max(...prs.map(p => p.reps)) : null
+
+  const handleDelete = async (prId: string) => {
+    setDeleting(prId)
+    await onDelete(prId)
+    setDeleting(null)
+  }
 
   const handleSave = async () => {
     if (!reps) return
@@ -101,8 +109,20 @@ export function PRModal({ exName, setIndex, prs, accent, onSave, onClose }: Prop
                   {pr.note && <div className={css.recordNote}>{pr.note}</div>}
                 </div>
               </div>
-              <div className={css.recordDate}>
-                {new Date(pr.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+              <div className={css.recordRight}>
+                <div className={css.recordDate}>
+                  {new Date(pr.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                </div>
+                {pr.id && (
+                  <button
+                    className={css.deleteBtn}
+                    disabled={deleting === pr.id}
+                    onClick={() => pr.id && handleDelete(pr.id)}
+                    title="Delete this record"
+                  >
+                    {deleting === pr.id ? '…' : '×'}
+                  </button>
+                )}
               </div>
             </div>
           ))

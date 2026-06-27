@@ -1,0 +1,1 @@
+Afficher un exo a la fois aulieu de scroll down. A la fin de chaque exo, on slide au suivant. On peut slide back and forth entre les exos.

@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 import {
-  getFirestore, doc, getDoc, setDoc,
+  getFirestore, doc, getDoc, setDoc, deleteDoc,
   collection, addDoc, query, getDocs, orderBy,
 } from 'firebase/firestore'
 import type { PR, Session, UserData } from '../types'
@@ -48,7 +48,7 @@ export async function loadPRsForExercise(
       try {
         const q    = query(prSetCol(uid, exName, si), orderBy('date', 'desc'))
         const snap = await getDocs(q)
-        results[si] = snap.docs.map(d => d.data() as PR)
+        results[si] = snap.docs.map(d => ({ id: d.id, ...d.data() } as PR))
       } catch { /* empty set */ }
     })
   )
@@ -58,7 +58,15 @@ export async function loadPRsForExercise(
 export async function addPRForSet(
   uid: string, exName: string, setIndex: number, pr: PR
 ) {
-  await addDoc(prSetCol(uid, exName, setIndex), pr)
+  const { id: _id, ...prData } = pr
+  await addDoc(prSetCol(uid, exName, setIndex), prData)
+}
+
+export async function deletePRForSet(
+  uid: string, exName: string, setIndex: number, prId: string
+) {
+  const ref = doc(db, 'users', uid, 'prs', exName, `s${setIndex}`, prId)
+  await deleteDoc(ref)
 }
 
 export async function archiveSession(uid: string, session: Session) {

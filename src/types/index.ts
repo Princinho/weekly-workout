@@ -18,6 +18,7 @@ export interface Day {
 }
 
 export interface PR {
+  id?: string        // Firestore doc ID, present after load
   reps: number
   weight?: number   // kg, optional — captured from today onwards
   note?: string
@@ -53,4 +54,6 @@ export interface UserData {
   difficulty?: DifficultyMap
   customReps?: CustomRepsMap
   customSets?: CustomSetsMap
+  disabledExercises?: Record<string, boolean>
+  exerciseOrder?: Record<string, string[]>  // day index (as string) → ordered exercise names
 }

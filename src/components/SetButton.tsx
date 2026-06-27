@@ -6,8 +6,8 @@ interface Props {
   number: number
   /** Target reps label (e.g. "8–12"). First digit shown when no PR. */
   targetReps: string
-  /** Best PR reps count for this exercise, or null if none */
-  bestPR: number | null
+  /** Most recent session's reps for this set, or null if none */
+  latestPR: number | null
   accent: string
   onToggle: () => void
   onLongPress: () => void
@@ -19,7 +19,7 @@ function firstRep(reps: string): string {
   return m ? m[0] : reps
 }
 
-export function SetButton({ done, number, targetReps, bestPR, accent, onToggle, onLongPress }: Props) {
+export function SetButton({ done, number, targetReps, latestPR, accent, onToggle, onLongPress }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const firedRef = useRef(false)
   const [pressing, setPressing] = useState(false)
@@ -45,8 +45,8 @@ export function SetButton({ done, number, targetReps, bestPR, accent, onToggle, 
   let label: string
   if (done) {
     label = '✓'
-  } else if (bestPR !== null) {
-    label = String(bestPR)
+  } else if (latestPR !== null) {
+    label = String(latestPR)
   } else {
     label = firstRep(targetReps)
   }

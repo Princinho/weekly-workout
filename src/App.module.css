@@ -162,3 +162,55 @@
   color: var(--text-primary);
   font-weight: 600;
 }
+
+/* Day settings button (inline with muscle tags) */
+.daySettingsBtn {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.daySettingsBtn:hover {
+  color: var(--text-primary);
+  border-color: #aaa;
+}
+
+/* Workout complete congrats banner (replaces rest timer) */
+.congrats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid;
+  background: #fff;
+  margin-bottom: 4px;
+}
+
+.congratsEmoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.congratsTitle {
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+}
+
+.congratsSub {
+  font-size: 11px;
+  color: #888;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
